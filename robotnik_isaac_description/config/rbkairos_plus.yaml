@@ -1,0 +1,11 @@
+robot_model: rbkairos_plus
+usd: assets/rbkairos/usd/rbkairos_plus/rbkairos_plus.usda
+base_frame: robot_base_footprint
+arm_type: ur10e
+arm_joints:
+  - arm_shoulder_pan_joint
+  - arm_shoulder_lift_joint
+  - arm_elbow_joint
+  - arm_wrist_1_joint
+  - arm_wrist_2_joint
+  - arm_wrist_3_joint

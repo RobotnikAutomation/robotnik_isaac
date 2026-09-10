@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<robot name="rbkairos_plus" xmlns:xacro="http://wiki.ros.org/xacro">
+  <!-- Complete mobile manipulator, deliberately without sensors or Gazebo. -->
+  <xacro:arg name="ur_type" default="ur10e"/>
+  <xacro:arg name="gazebo_ignition" default="false"/>
+  <xacro:include filename="$(find robotnik_description)/urdf/bases/rbkairos/rbkairos_base.urdf.xacro"/>
+  <xacro:include filename="$(find robotnik_description)/urdf/arms/ur_macro.urdf.xacro"/>
+  <xacro:rbkairos prefix="robot_" gazebo_ignition="false" namespace="robot"/>
+  <xacro:arm_ur ur_type="ur10e" frame_prefix="arm_" parent="robot_top_cover" gazebo_ignition="false">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </xacro:arm_ur>
+</robot>

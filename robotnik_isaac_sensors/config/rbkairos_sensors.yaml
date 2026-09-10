@@ -1,0 +1,20 @@
+imu:
+  frame_id: imu_link
+  topic: imu/data
+  rate_hz: 100
+front_laser:
+  frame_id: front_laser_link
+  topic: front_laser/scan
+  rate_hz: 20
+  horizontal_fov_rad: 4.2
+rear_laser:
+  frame_id: rear_laser_link
+  topic: rear_laser/scan
+  rate_hz: 20
+  horizontal_fov_rad: 4.2
+front_rgbd_camera:
+  frame_id: front_rgbd_camera_link
+  color_topic: front_rgbd_camera/color/image_raw
+  depth_topic: front_rgbd_camera/depth/image_raw
+  camera_info_topic: front_rgbd_camera/color/camera_info
+  rate_hz: 30

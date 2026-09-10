@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<library path="robotnik_isaac_ros2_control">
+  <class
+    name="robotnik_isaac_ros2_control/IsaacSystem"
+    type="robotnik_isaac_ros2_control::IsaacSystem"
+    base_class_type="hardware_interface::SystemInterface">
+    <description>
+      Maps ros2_control wheel interfaces to Isaac Sim ROS 2 JointState topics.
+    </description>
+  </class>
+</library>

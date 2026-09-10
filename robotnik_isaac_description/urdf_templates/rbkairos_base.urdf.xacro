@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<robot name="rbkairos_base" xmlns:xacro="http://wiki.ros.org/xacro">
+  <!-- Offline source template. The generated URDF contains no xacro tags. -->
+  <xacro:arg name="gazebo_ignition" default="false"/>
+  <xacro:include filename="$(find robotnik_description)/urdf/bases/rbkairos/rbkairos_base.urdf.xacro"/>
+  <xacro:rbkairos prefix="robot_" gazebo_ignition="false" namespace="robot"/>
+</robot>

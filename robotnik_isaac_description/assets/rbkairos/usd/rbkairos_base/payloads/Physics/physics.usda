@@ -1,0 +1,298 @@
+#usda 1.0
+(
+    customLayerData = {
+        string creator = "URDF USD Converter v0.1.3"
+    }
+    defaultPrim = "rbkairos_base"
+    doc = """Generated from Composed Stage of root layer /tmp/tmp0_ul0f22/rbkairos_base.usdc
+
+
+Generated from Composed Stage of root layer /tmp/urdf_import_rbkairos_base_ytjqe64t/usdex_rbkairos_base/rbkairos_base.usdc
+
+
+Generated from Composed Stage of root layer /tmp/urdf_import_rbkairos_base_ytjqe64t/temp_rbkairos_base/rbkairos_base.usd
+
+
+Generated from Composed Stage of root layer /home/robotnik/jlgalan_dev/Onrobot_Testing_ws/src/robotnik_isaac_sim/robotnik_isaac_description/assets/rbkairos/urdf/rbkairos_base/payloads/base.usd
+"""
+    kilogramsPerUnit = 1
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+over "rbkairos_base"
+{
+    over "Geometry"
+    {
+        over "robot_base_footprint" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsArticulationRootAPI", "NewtonArticulationRootAPI"]
+        )
+        {
+            bool newton:selfCollisionEnabled = 0
+
+            over "robot_base_link" (
+                prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+            )
+            {
+                point3f physics:centerOfMass = (0, 0, 0)
+                float3 physics:diagonalInertia = (1.390997, 6.125, 6.853003)
+                float physics:mass = 125
+                quatf physics:principalAxes = (-0.7071067, 0.7071067, -0.00025891844, -0.00025891844)
+
+                over "robot_top_cover" (
+                    prepend apiSchemas = ["PhysicsRigidBodyAPI"]
+                )
+                {
+                }
+
+                over "robot_base_logo_left" (
+                    prepend apiSchemas = ["PhysicsRigidBodyAPI"]
+                )
+                {
+                }
+
+                over "robot_base_logo_right" (
+                    prepend apiSchemas = ["PhysicsRigidBodyAPI"]
+                )
+                {
+                }
+
+                over "robot_base_logo_front" (
+                    prepend apiSchemas = ["PhysicsRigidBodyAPI"]
+                )
+                {
+                }
+
+                over "robot_base_logo_rear" (
+                    prepend apiSchemas = ["PhysicsRigidBodyAPI"]
+                )
+                {
+                }
+
+                over "robot_front_right_wheel_link" (
+                    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                )
+                {
+                    point3f physics:centerOfMass = (0, 0, 0)
+                    float3 physics:diagonalInertia = (0.0303095, 0.0303095, 0.05241925)
+                    float physics:mass = 6.5
+                    quatf physics:principalAxes = (0.70710677, 0.70710677, 0, 0)
+
+                    over "sphere" (
+                        prepend apiSchemas = ["NewtonCollisionAPI"]
+                    )
+                    {
+                    }
+                }
+
+                over "robot_front_left_wheel_link" (
+                    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                )
+                {
+                    point3f physics:centerOfMass = (0, 0, 0)
+                    float3 physics:diagonalInertia = (0.0303095, 0.0303095, 0.05241925)
+                    float physics:mass = 6.5
+                    quatf physics:principalAxes = (0.70710677, 0.70710677, 0, 0)
+
+                    over "sphere" (
+                        prepend apiSchemas = ["NewtonCollisionAPI"]
+                    )
+                    {
+                    }
+                }
+
+                over "robot_back_left_wheel_link" (
+                    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                )
+                {
+                    point3f physics:centerOfMass = (0, 0, 0)
+                    float3 physics:diagonalInertia = (0.0303095, 0.0303095, 0.05241925)
+                    float physics:mass = 6.5
+                    quatf physics:principalAxes = (0.70710677, 0.70710677, 0, 0)
+
+                    over "sphere" (
+                        prepend apiSchemas = ["NewtonCollisionAPI"]
+                    )
+                    {
+                    }
+                }
+
+                over "robot_back_right_wheel_link" (
+                    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+                )
+                {
+                    point3f physics:centerOfMass = (0, 0, 0)
+                    float3 physics:diagonalInertia = (0.0303095, 0.0303095, 0.05241925)
+                    float physics:mass = 6.5
+                    quatf physics:principalAxes = (0.70710677, 0.70710677, 0, 0)
+
+                    over "sphere" (
+                        prepend apiSchemas = ["NewtonCollisionAPI"]
+                    )
+                    {
+                    }
+                }
+            }
+        }
+    }
+
+    over "Physics"
+    {
+        def PhysicsRevoluteJoint "robot_front_right_wheel_joint" (
+            prepend apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+        )
+        {
+            float drive:angular:physics:maxForce = 100000
+            uniform token physics:axis = "Y"
+            custom rel physics:body0
+            prepend rel physics:body0 = </rbkairos_base/Geometry/robot_base_footprint/robot_base_link>
+            custom rel physics:body1
+            prepend rel physics:body1 = </rbkairos_base/Geometry/robot_base_footprint/robot_base_link/robot_front_right_wheel_link>
+            point3f physics:localPos0 = (0.21528, -0.259, 0)
+            point3f physics:localPos1 = (0, 0, 0)
+            quatf physics:localRot0 = (1, 0, 0, 0)
+            quatf physics:localRot1 = (1, 0, 0, 0)
+            custom float urdf:limit:effort = 100000
+            custom float urdf:limit:velocity = 100
+        }
+
+        def PhysicsRevoluteJoint "robot_front_left_wheel_joint" (
+            prepend apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+        )
+        {
+            float drive:angular:physics:maxForce = 100000
+            uniform token physics:axis = "Y"
+            custom rel physics:body0
+            prepend rel physics:body0 = </rbkairos_base/Geometry/robot_base_footprint/robot_base_link>
+            custom rel physics:body1
+            prepend rel physics:body1 = </rbkairos_base/Geometry/robot_base_footprint/robot_base_link/robot_front_left_wheel_link>
+            point3f physics:localPos0 = (0.21528, 0.259, 0)
+            point3f physics:localPos1 = (0, 0, 0)
+            quatf physics:localRot0 = (1, 0, 0, 0)
+            quatf physics:localRot1 = (1, 0, 0, 0)
+            custom float urdf:limit:effort = 100000
+            custom float urdf:limit:velocity = 100
+        }
+
+        def PhysicsRevoluteJoint "robot_back_left_wheel_joint" (
+            prepend apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+        )
+        {
+            float drive:angular:physics:maxForce = 100000
+            uniform token physics:axis = "Y"
+            custom rel physics:body0
+            prepend rel physics:body0 = </rbkairos_base/Geometry/robot_base_footprint/robot_base_link>
+            custom rel physics:body1
+            prepend rel physics:body1 = </rbkairos_base/Geometry/robot_base_footprint/robot_base_link/robot_back_left_wheel_link>
+            point3f physics:localPos0 = (-0.21528, 0.259, 0)
+            point3f physics:localPos1 = (0, 0, 0)
+            quatf physics:localRot0 = (1, 0, 0, 0)
+            quatf physics:localRot1 = (1, 0, 0, 0)
+            custom float urdf:limit:effort = 100000
+            custom float urdf:limit:velocity = 100
+        }
+
+        def PhysicsRevoluteJoint "robot_back_right_wheel_joint" (
+            prepend apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+        )
+        {
+            float drive:angular:physics:maxForce = 100000
+            uniform token physics:axis = "Y"
+            custom rel physics:body0
+            prepend rel physics:body0 = </rbkairos_base/Geometry/robot_base_footprint/robot_base_link>
+            custom rel physics:body1
+            prepend rel physics:body1 = </rbkairos_base/Geometry/robot_base_footprint/robot_base_link/robot_back_right_wheel_link>
+            point3f physics:localPos0 = (-0.21528, -0.259, 0)
+            point3f physics:localPos1 = (0, 0, 0)
+            quatf physics:localRot0 = (1, 0, 0, 0)
+            quatf physics:localRot1 = (1, 0, 0, 0)
+            custom float urdf:limit:effort = 100000
+            custom float urdf:limit:velocity = 100
+        }
+
+        def PhysicsFixedJoint "root_joint"
+        {
+            custom rel physics:body0
+            prepend rel physics:body0 = </rbkairos_base>
+            custom rel physics:body1
+            prepend rel physics:body1 = </rbkairos_base/Geometry/robot_base_footprint>
+            point3f physics:localPos0 = (0, 0, 0)
+            point3f physics:localPos1 = (0, 0, 0)
+            quatf physics:localRot0 = (1, 0, 0, 0)
+            quatf physics:localRot1 = (1, 0, 0, 0)
+        }
+
+        def PhysicsFixedJoint "robot_base_footprint_joint"
+        {
+            custom rel physics:body0
+            prepend rel physics:body0 = </rbkairos_base/Geometry/robot_base_footprint>
+            custom rel physics:body1
+            prepend rel physics:body1 = </rbkairos_base/Geometry/robot_base_footprint/robot_base_link>
+            point3f physics:localPos0 = (0, 0, 0.127)
+            point3f physics:localPos1 = (0, 0, 0)
+            quatf physics:localRot0 = (1, 0, 0, 0)
+            quatf physics:localRot1 = (1, 0, 0, 0)
+        }
+
+        def PhysicsFixedJoint "robot_top_cover_joint"
+        {
+            custom rel physics:body0
+            prepend rel physics:body0 = </rbkairos_base/Geometry/robot_base_footprint/robot_base_link>
+            custom rel physics:body1
+            prepend rel physics:body1 = </rbkairos_base/Geometry/robot_base_footprint/robot_base_link/robot_top_cover>
+            point3f physics:localPos0 = (0, 0, 0.56162)
+            point3f physics:localPos1 = (0, 0, -0.0065)
+            quatf physics:localRot0 = (1, 0, 0, 0)
+            quatf physics:localRot1 = (1, 0, 0, 0)
+        }
+
+        def PhysicsFixedJoint "robot_base_logo_left_joint"
+        {
+            custom rel physics:body0
+            prepend rel physics:body0 = </rbkairos_base/Geometry/robot_base_footprint/robot_base_link>
+            custom rel physics:body1
+            prepend rel physics:body1 = </rbkairos_base/Geometry/robot_base_footprint/robot_base_link/robot_base_logo_left>
+            point3f physics:localPos0 = (0, 0.2894, 0.35562)
+            point3f physics:localPos1 = (0, 0, 0)
+            quatf physics:localRot0 = (1, 0, 0, 0)
+            quatf physics:localRot1 = (1, 0, 0, 0)
+        }
+
+        def PhysicsFixedJoint "robot_base_logo_right_joint"
+        {
+            custom rel physics:body0
+            prepend rel physics:body0 = </rbkairos_base/Geometry/robot_base_footprint/robot_base_link>
+            custom rel physics:body1
+            prepend rel physics:body1 = </rbkairos_base/Geometry/robot_base_footprint/robot_base_link/robot_base_logo_right>
+            point3f physics:localPos0 = (0, -0.28931, 0.35562)
+            point3f physics:localPos1 = (0, 0, 0)
+            quatf physics:localRot0 = (6.123234e-17, 0, 0, 1)
+            quatf physics:localRot1 = (1, 0, 0, 0)
+        }
+
+        def PhysicsFixedJoint "robot_base_logo_front_joint"
+        {
+            custom rel physics:body0
+            prepend rel physics:body0 = </rbkairos_base/Geometry/robot_base_footprint/robot_base_link>
+            custom rel physics:body1
+            prepend rel physics:body1 = </rbkairos_base/Geometry/robot_base_footprint/robot_base_link/robot_base_logo_front>
+            point3f physics:localPos0 = (0.345, 0, 0)
+            point3f physics:localPos1 = (0, 0, 0)
+            quatf physics:localRot0 = (-0.70710677, 0, 0, 0.70710677)
+            quatf physics:localRot1 = (1, 0, 0, 0)
+        }
+
+        def PhysicsFixedJoint "robot_base_logo_rear_joint"
+        {
+            custom rel physics:body0
+            prepend rel physics:body0 = </rbkairos_base/Geometry/robot_base_footprint/robot_base_link>
+            custom rel physics:body1
+            prepend rel physics:body1 = </rbkairos_base/Geometry/robot_base_footprint/robot_base_link/robot_base_logo_rear>
+            point3f physics:localPos0 = (-0.345, 0, 0)
+            point3f physics:localPos1 = (0, 0, 0)
+            quatf physics:localRot0 = (0.70710677, 0, 0, 0.70710677)
+            quatf physics:localRot1 = (1, 0, 0, 0)
+        }
+    }
+}
+

@@ -1,0 +1,910 @@
+#usda 1.0
+(
+    customLayerData = {
+        string creator = "URDF USD Converter v0.1.3"
+    }
+    doc = """Generated from Composed Stage of root layer /tmp/tmpoxfkn6wc/rbkairos_plus.usdc
+
+
+Generated from Composed Stage of root layer /tmp/urdf_import_rbkairos_plus_pdc36xf_/usdex_rbkairos_plus/rbkairos_plus.usdc
+
+
+Generated from Composed Stage of root layer /tmp/urdf_import_rbkairos_plus_pdc36xf_/temp_rbkairos_plus/rbkairos_plus.usd
+
+
+Generated from Composed Stage of root layer /home/robotnik/jlgalan_dev/Onrobot_Testing_ws/src/robotnik_isaac_sim/robotnik_isaac_description/assets/rbkairos/urdf/rbkairos_plus_1/payloads/base.usd
+"""
+    kilogramsPerUnit = 1
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Scope "Instances"
+{
+    def Xform "rbkairos_chassis" (
+        prepend references = @./geometries.usd@</Geometries/rbkairos_chassis>
+    )
+    {
+        over "rbkairos_chassis" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/rbkairos_chassis/VisualMaterials/black>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "black" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/black>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "rbkairos_chassis_1" (
+        prepend references = @./geometries.usd@</Geometries/rbkairos_chassis>
+    )
+    {
+        over "rbkairos_chassis" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI"]
+        )
+        {
+            token physics:approximation = "convexHull"
+            token purpose = "guide"
+        }
+    }
+
+    def Xform "rbkairos_top_cover" (
+        prepend references = @./geometries.usd@</Geometries/rbkairos_top_cover>
+    )
+    {
+        over "rbkairos_top_cover" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/rbkairos_top_cover/VisualMaterials/darkgrey>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "darkgrey" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/darkgrey>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__eSeriesUR10e010_sFY7" (
+        prepend references = @./geometries.usd@</Geometries/tn__eSeriesUR10e010_sFY7>
+    )
+    {
+        over "tn__eSeriesUR10e010_sFY7" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__eSeriesUR10e010_sFY7/VisualMaterials/JointGrey>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "JointGrey" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/JointGrey>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__eSeriesUR10e043_sFY7" (
+        prepend references = @./geometries.usd@</Geometries/tn__eSeriesUR10e043_sFY7>
+    )
+    {
+        over "tn__eSeriesUR10e043_sFY7" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__eSeriesUR10e043_sFY7/VisualMaterials/Black>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "Black" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/Black>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__eSeriesUR10e023_sFY7" (
+        prepend references = @./geometries.usd@</Geometries/tn__eSeriesUR10e023_sFY7>
+    )
+    {
+        over "tn__eSeriesUR10e023_sFY7" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__eSeriesUR10e023_sFY7/VisualMaterials/JointGrey_1>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "JointGrey_1" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/JointGrey>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__eSeriesUR10e044_sFY7" (
+        prepend references = @./geometries.usd@</Geometries/tn__eSeriesUR10e044_sFY7>
+    )
+    {
+        over "tn__eSeriesUR10e044_sFY7" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__eSeriesUR10e044_sFY7/VisualMaterials/Black_1>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "Black_1" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/Black>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__eSeriesUR10e045_sFY7" (
+        prepend references = @./geometries.usd@</Geometries/tn__eSeriesUR10e045_sFY7>
+    )
+    {
+        over "tn__eSeriesUR10e045_sFY7" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__eSeriesUR10e045_sFY7/VisualMaterials/URBlue>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "URBlue" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/URBlue>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__eSeriesUR10e028_sFY7" (
+        prepend references = @./geometries.usd@</Geometries/tn__eSeriesUR10e028_sFY7>
+    )
+    {
+        over "tn__eSeriesUR10e028_sFY7" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__eSeriesUR10e028_sFY7/VisualMaterials/LinkGrey>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "LinkGrey" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/LinkGrey>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__eSeriesUR10e046_sFY7" (
+        prepend references = @./geometries.usd@</Geometries/tn__eSeriesUR10e046_sFY7>
+    )
+    {
+        over "tn__eSeriesUR10e046_sFY7" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__eSeriesUR10e046_sFY7/VisualMaterials/URBlue_1>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "URBlue_1" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/URBlue>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__eSeriesUR10e047_sFY7" (
+        prepend references = @./geometries.usd@</Geometries/tn__eSeriesUR10e047_sFY7>
+    )
+    {
+        over "tn__eSeriesUR10e047_sFY7" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__eSeriesUR10e047_sFY7/VisualMaterials/URBlue_1>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "URBlue_1" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/URBlue>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__eSeriesUR10e049_sFY7" (
+        prepend references = @./geometries.usd@</Geometries/tn__eSeriesUR10e049_sFY7>
+    )
+    {
+        over "tn__eSeriesUR10e049_sFY7" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__eSeriesUR10e049_sFY7/VisualMaterials/JointGrey_2>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "JointGrey_2" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/JointGrey>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__eSeriesUR10e050_sFY7" (
+        prepend references = @./geometries.usd@</Geometries/tn__eSeriesUR10e050_sFY7>
+    )
+    {
+        over "tn__eSeriesUR10e050_sFY7" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__eSeriesUR10e050_sFY7/VisualMaterials/Black_2>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "Black_2" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/Black>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__eSeriesUR10e051_sFY7" (
+        prepend references = @./geometries.usd@</Geometries/tn__eSeriesUR10e051_sFY7>
+    )
+    {
+        over "tn__eSeriesUR10e051_sFY7" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__eSeriesUR10e051_sFY7/VisualMaterials/JointGrey_2>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "JointGrey_2" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/JointGrey>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__eSeriesUR10e052_sFY7" (
+        prepend references = @./geometries.usd@</Geometries/tn__eSeriesUR10e052_sFY7>
+    )
+    {
+        over "tn__eSeriesUR10e052_sFY7" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__eSeriesUR10e052_sFY7/VisualMaterials/Black_2>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "Black_2" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/Black>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__eSeriesUR10e053_sFY7" (
+        prepend references = @./geometries.usd@</Geometries/tn__eSeriesUR10e053_sFY7>
+    )
+    {
+        over "tn__eSeriesUR10e053_sFY7" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__eSeriesUR10e053_sFY7/VisualMaterials/Black_2>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "Black_2" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/Black>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__eSeriesUR10e031_sFY7" (
+        prepend references = @./geometries.usd@</Geometries/tn__eSeriesUR10e031_sFY7>
+    )
+    {
+        over "tn__eSeriesUR10e031_sFY7" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__eSeriesUR10e031_sFY7/VisualMaterials/LinkGrey_1>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "LinkGrey_1" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/LinkGrey>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__eSeriesUR10e054_sFY7" (
+        prepend references = @./geometries.usd@</Geometries/tn__eSeriesUR10e054_sFY7>
+    )
+    {
+        over "tn__eSeriesUR10e054_sFY7" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__eSeriesUR10e054_sFY7/VisualMaterials/JointGrey_3>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "JointGrey_3" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/JointGrey>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__eSeriesUR10e055_sFY7" (
+        prepend references = @./geometries.usd@</Geometries/tn__eSeriesUR10e055_sFY7>
+    )
+    {
+        over "tn__eSeriesUR10e055_sFY7" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__eSeriesUR10e055_sFY7/VisualMaterials/Black_3>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "Black_3" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/Black>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__eSeriesUR10e056_sFY7" (
+        prepend references = @./geometries.usd@</Geometries/tn__eSeriesUR10e056_sFY7>
+    )
+    {
+        over "tn__eSeriesUR10e056_sFY7" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__eSeriesUR10e056_sFY7/VisualMaterials/URBlue_2>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "URBlue_2" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/URBlue>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__eSeriesUR10e057_sFY7" (
+        prepend references = @./geometries.usd@</Geometries/tn__eSeriesUR10e057_sFY7>
+    )
+    {
+        over "tn__eSeriesUR10e057_sFY7" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__eSeriesUR10e057_sFY7/VisualMaterials/JointGrey_3>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "JointGrey_3" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/JointGrey>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__eSeriesUR10e058_sFY7" (
+        prepend references = @./geometries.usd@</Geometries/tn__eSeriesUR10e058_sFY7>
+    )
+    {
+        over "tn__eSeriesUR10e058_sFY7" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__eSeriesUR10e058_sFY7/VisualMaterials/Black_3>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "Black_3" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/Black>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__eSeriesUR10e059_sFY7" (
+        prepend references = @./geometries.usd@</Geometries/tn__eSeriesUR10e059_sFY7>
+    )
+    {
+        over "tn__eSeriesUR10e059_sFY7" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__eSeriesUR10e059_sFY7/VisualMaterials/Black_3>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "Black_3" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/Black>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__eSeriesUR10e037_sFY7" (
+        prepend references = @./geometries.usd@</Geometries/tn__eSeriesUR10e037_sFY7>
+    )
+    {
+        over "tn__eSeriesUR10e037_sFY7" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__eSeriesUR10e037_sFY7/VisualMaterials/JointGrey_4>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "JointGrey_4" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/JointGrey>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__eSeriesUR10e060_sFY7" (
+        prepend references = @./geometries.usd@</Geometries/tn__eSeriesUR10e060_sFY7>
+    )
+    {
+        over "tn__eSeriesUR10e060_sFY7" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__eSeriesUR10e060_sFY7/VisualMaterials/URBlue_3>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "URBlue_3" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/URBlue>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__eSeriesUR10e061_sFY7" (
+        prepend references = @./geometries.usd@</Geometries/tn__eSeriesUR10e061_sFY7>
+    )
+    {
+        over "tn__eSeriesUR10e061_sFY7" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__eSeriesUR10e061_sFY7/VisualMaterials/Black_4>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "Black_4" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/Black>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__eSeriesUR10e040_sFY7" (
+        prepend references = @./geometries.usd@</Geometries/tn__eSeriesUR10e040_sFY7>
+    )
+    {
+        over "tn__eSeriesUR10e040_sFY7" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__eSeriesUR10e040_sFY7/VisualMaterials/JointGrey_5>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "JointGrey_5" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/JointGrey>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__eSeriesUR10e062_sFY7" (
+        prepend references = @./geometries.usd@</Geometries/tn__eSeriesUR10e062_sFY7>
+    )
+    {
+        over "tn__eSeriesUR10e062_sFY7" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__eSeriesUR10e062_sFY7/VisualMaterials/URBlue_4>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "URBlue_4" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/URBlue>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__eSeriesUR10e063_sFY7" (
+        prepend references = @./geometries.usd@</Geometries/tn__eSeriesUR10e063_sFY7>
+    )
+    {
+        over "tn__eSeriesUR10e063_sFY7" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__eSeriesUR10e063_sFY7/VisualMaterials/Black_5>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "Black_5" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/Black>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "wrist3" (
+        prepend references = @./geometries.usd@</Geometries/wrist3>
+    )
+    {
+        over "wrist3" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/wrist3/VisualMaterials/LinkGrey_2>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "LinkGrey_2" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/LinkGrey>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "wrist3_1" (
+        prepend references = @./geometries.usd@</Geometries/wrist3_1>
+    )
+    {
+        over "wrist3_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI"]
+        )
+        {
+            token physics:approximation = "convexHull"
+            token purpose = "guide"
+        }
+    }
+
+    def Xform "wrist2_1" (
+        prepend references = @./geometries.usd@</Geometries/wrist2_1>
+    )
+    {
+        over "wrist2_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI"]
+        )
+        {
+            token physics:approximation = "convexHull"
+            token purpose = "guide"
+        }
+    }
+
+    def Xform "wrist1_1" (
+        prepend references = @./geometries.usd@</Geometries/wrist1_1>
+    )
+    {
+        over "wrist1_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI"]
+        )
+        {
+            token physics:approximation = "convexHull"
+            token purpose = "guide"
+        }
+    }
+
+    def Xform "forearm_1" (
+        prepend references = @./geometries.usd@</Geometries/forearm_1>
+    )
+    {
+        over "forearm_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI"]
+        )
+        {
+            token physics:approximation = "convexHull"
+            token purpose = "guide"
+        }
+    }
+
+    def Xform "upperarm_1" (
+        prepend references = @./geometries.usd@</Geometries/upperarm_1>
+    )
+    {
+        over "upperarm_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI"]
+        )
+        {
+            token physics:approximation = "convexHull"
+            token purpose = "guide"
+        }
+    }
+
+    def Xform "shoulder_1" (
+        prepend references = @./geometries.usd@</Geometries/shoulder_1>
+    )
+    {
+        over "shoulder_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI"]
+        )
+        {
+            token physics:approximation = "convexHull"
+            token purpose = "guide"
+        }
+    }
+
+    def Xform "base_1" (
+        prepend references = @./geometries.usd@</Geometries/base_1>
+    )
+    {
+        over "base_1" (
+            apiSchemas = ["PhysicsCollisionAPI", "NewtonCollisionAPI", "PhysicsMeshCollisionAPI", "NewtonMeshCollisionAPI"]
+        )
+        {
+            token physics:approximation = "convexHull"
+            token purpose = "guide"
+        }
+    }
+
+    def Xform "robotnik_logo_chasis" (
+        prepend references = @./geometries.usd@</Geometries/robotnik_logo_chasis>
+    )
+    {
+        over "robotnik_logo_chasis" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/robotnik_logo_chasis/VisualMaterials/darkgrey>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "darkgrey" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/darkgrey>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__mecawheelBllantas1_yIl4Jf0M" (
+        prepend references = @./geometries.usd@</Geometries/tn__mecawheelBllantas1_yIl4Jf0M>
+    )
+    {
+        over "tn__mecawheelBllantas1_yIl4Jf0M" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__mecawheelBllantas1_yIl4Jf0M/VisualMaterials/Material_002>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "Material_002" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/Material_002>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__mecawheelBrollers_xHd4d0" (
+        prepend references = @./geometries.usd@</Geometries/tn__mecawheelBrollers_xHd4d0>
+    )
+    {
+        over "tn__mecawheelBrollers_xHd4d0" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__mecawheelBrollers_xHd4d0/VisualMaterials/Material_001>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "Material_001" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/Material_001>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__mecawheelAllantas1_yIl4Jf0M" (
+        prepend references = @./geometries.usd@</Geometries/tn__mecawheelAllantas1_yIl4Jf0M>
+    )
+    {
+        over "tn__mecawheelAllantas1_yIl4Jf0M" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__mecawheelAllantas1_yIl4Jf0M/VisualMaterials/Material_002_1>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "Material_002_1" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/Material_002>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "tn__mecawheelArollers_xHd4d0" (
+        prepend references = @./geometries.usd@</Geometries/tn__mecawheelArollers_xHd4d0>
+    )
+    {
+        over "tn__mecawheelArollers_xHd4d0" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/tn__mecawheelArollers_xHd4d0/VisualMaterials/Material_001_1>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "Material_001_1" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/Material_001>
+            )
+            {
+            }
+        }
+    }
+}
+
