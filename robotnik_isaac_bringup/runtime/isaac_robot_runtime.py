@@ -6,7 +6,9 @@ receives an independent namespace and pose.
 """
 
 import argparse
+import math
 from pathlib import Path
+import traceback
 
 
 WHEEL_JOINTS = (
@@ -15,6 +17,26 @@ WHEEL_JOINTS = (
     'robot_back_left_wheel_joint',
     'robot_back_right_wheel_joint',
 )
+
+ARM_JOINTS = (
+    'arm_shoulder_pan_joint',
+    'arm_shoulder_lift_joint',
+    'arm_elbow_joint',
+    'arm_wrist_1_joint',
+    'arm_wrist_2_joint',
+    'arm_wrist_3_joint',
+)
+
+# Folded ``home`` pose shared with the isolated MoveIt SRDF.  ROS represents
+# revolute joints in radians; USD/PhysX angular drive attributes use degrees.
+ARM_HOME_POSITIONS_RAD = {
+    'arm_shoulder_pan_joint': 0.0,
+    'arm_shoulder_lift_joint': -2.4125,
+    'arm_elbow_joint': 2.4125,
+    'arm_wrist_1_joint': -1.57,
+    'arm_wrist_2_joint': -1.57,
+    'arm_wrist_3_joint': 0.0,
+}
 
 VISUAL_FIXED_LINKS = (
     ('robot_top_cover', 'robot_top_cover_joint'),
@@ -29,7 +51,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--robot-id', required=True)
     parser.add_argument('--robot-model', choices=('rbkairos', 'rbkairos_plus'), required=True)
-    parser.add_argument('--headless', choices=('true', 'false'), default='true')
+    parser.add_argument('--headless', choices=('true', 'false'), default='false')
     parser.add_argument('--description-share', required=True)
     parser.add_argument('--sensors-share', required=True)
     parser.add_argument('--x', type=float, default=0.0)
@@ -154,6 +176,41 @@ def _configure_wheel_velocity_drives(stage, root_path):
         drive.CreateDampingAttr().Set(10000.0)
 
 
+def _configure_arm_position_drives(stage, root_path):
+    """Start and hold the UR10e in its folded home pose.
+
+    The URDF importer creates angular drives and effort limits for the arm but
+    leaves their stiffness and damping at zero.  Such drives exert no torque,
+    so gravity makes the arm collapse as soon as playback begins.  Give every
+    arm joint a damped position servo targeting the configured home pose.
+    Author that pose as the initial joint state too, preventing a fast motion
+    from the imported zero pose at the first physics frame.  A later ROS
+    position command can update these same targets; MoveIt
+    is not required merely to hold the robot upright.
+    """
+    from pxr import Sdf, UsdPhysics
+
+    for joint_name in ARM_JOINTS:
+        joint_path = f'{root_path}/Physics/{joint_name}'
+        joint = stage.GetPrimAtPath(joint_path)
+        if not joint.IsValid():
+            raise RuntimeError(f'Arm joint is missing from the stage: {joint_path}')
+
+        drive = UsdPhysics.DriveAPI.Apply(joint, 'angular')
+        drive.CreateTypeAttr().Set(UsdPhysics.Tokens.force)
+        drive.CreateStiffnessAttr().Set(10000.0)
+        drive.CreateDampingAttr().Set(1000.0)
+        home_degrees = math.degrees(ARM_HOME_POSITIONS_RAD[joint_name])
+        drive.CreateTargetPositionAttr().Set(home_degrees)
+        drive.CreateTargetVelocityAttr().Set(0.0)
+        joint.CreateAttribute(
+            'state:angular:physics:position', Sdf.ValueTypeNames.Float,
+        ).Set(home_degrees)
+        joint.CreateAttribute(
+            'state:angular:physics:velocity', Sdf.ValueTypeNames.Float,
+        ).Set(0.0)
+
+
 def _release_imported_root_joint(stage, root_path):
     """Disable the URDF-converter joint that otherwise anchors the robot.
 
@@ -170,9 +227,69 @@ def _release_imported_root_joint(stage, root_path):
     if not joint_prim.IsValid():
         raise RuntimeError(f'Imported root joint is missing from the stage: {joint_path}')
     UsdPhysics.Joint(joint_prim).CreateJointEnabledAttr().Set(False)
+    joint_prim.SetActive(False)
 
 
-def _sanitize_imported_physics(stage, root_path):
+def _attach_arm_to_physical_base(stage, root_path):
+    """Keep the UR10e in the base articulation when its visual mount is stripped.
+
+    The importer represents ``robot_top_cover`` as a rigid body even though the
+    URDF gives it no inertia.  The generic sanitizer removes that invalid rigid
+    body.  On RB-KAIROS+, however, the generated fixed joint for the UR10e root
+    targets the massless ``arm_base_link`` below the cover.  Once the cover is
+    stripped, that target no longer provides a physical connection to the
+    chassis and PhysX rejects the articulation when playback starts.
+
+    Retarget the generated arm-root fixed joint to ``robot_base_link`` and move
+    its body-0 anchor to the arm mount pose.  This is authored only in the
+    composed in-memory stage; the source USD remains unchanged.
+    """
+    from pxr import Gf, Usd, UsdGeom, UsdPhysics
+
+    geometry_path = f'{root_path}/Geometry/robot_base_footprint'
+    base_link = stage.GetPrimAtPath(f'{geometry_path}/robot_base_link')
+    arm_mount = stage.GetPrimAtPath(
+        f'{geometry_path}/robot_base_link/robot_top_cover/arm_base_link')
+    arm_body_path = (
+        f'{geometry_path}/robot_base_link/robot_top_cover/'
+        'arm_base_link/arm_base_link_inertia')
+    arm_body = stage.GetPrimAtPath(arm_body_path)
+    if not base_link.IsValid() or not arm_mount.IsValid() or not arm_body.IsValid():
+        raise RuntimeError('Imported RB-KAIROS+ arm mount links are missing from the stage.')
+
+    arm_root_joint = None
+    physics = stage.GetPrimAtPath(f'{root_path}/Physics')
+    for prim in Usd.PrimRange(physics):
+        if not prim.IsA(UsdPhysics.FixedJoint):
+            continue
+        joint = UsdPhysics.Joint(prim)
+        body1_targets = joint.GetBody1Rel().GetTargets()
+        if body1_targets == [arm_body.GetPath()]:
+            arm_root_joint = joint
+            break
+    if arm_root_joint is None:
+        raise RuntimeError('Imported RB-KAIROS+ arm-root fixed joint is missing.')
+
+    # The mount is a massless Xform beneath the cover.  Preserve its complete
+    # pose relative to the physical chassis when changing the joint target.
+    relative, reset_xform_stack = UsdGeom.XformCache().ComputeRelativeTransform(
+        arm_mount, base_link)
+    if reset_xform_stack:
+        raise RuntimeError('RB-KAIROS+ arm mount unexpectedly resets its Xform stack.')
+    mount_transform = Gf.Transform(relative)
+    mount_rotation = mount_transform.GetRotation().GetQuat()
+
+    old_position = arm_root_joint.GetLocalPos0Attr().Get() or Gf.Vec3f(0.0)
+    old_rotation = arm_root_joint.GetLocalRot0Attr().Get() or Gf.Quatf(1.0)
+    anchor_position = relative.Transform(Gf.Vec3d(old_position))
+    anchor_rotation = mount_rotation * Gf.Quatd(old_rotation)
+
+    arm_root_joint.GetBody0Rel().SetTargets([base_link.GetPath()])
+    arm_root_joint.CreateLocalPos0Attr().Set(Gf.Vec3f(anchor_position))
+    arm_root_joint.CreateLocalRot0Attr().Set(Gf.Quatf(anchor_rotation))
+
+
+def _sanitize_imported_physics(stage, root_path, robot_model):
     """Discard converter-created rigid bodies for non-physical fixed links.
 
     Robotnik's Xacro defines base_footprint, the cover and the logos as fixed
@@ -192,12 +309,23 @@ def _sanitize_imported_physics(stage, root_path):
 
     footprint.RemoveAPI(UsdPhysics.RigidBodyAPI)
     footprint.RemoveAPI(UsdPhysics.ArticulationRootAPI)
+    # Isaac Sim 6 imports the same root through its Newton schema as well.
+    # Keeping that weaker applied schema causes the runtime schema bridge to
+    # restore PhysicsArticulationRootAPI immediately after we remove it,
+    # leaving both footprint and base_link as articulation roots.
+    footprint.RemoveAppliedSchema('NewtonArticulationRootAPI')
     UsdPhysics.ArticulationRootAPI.Apply(base_link)
 
     footprint_joint = stage.GetPrimAtPath(f'{root_path}/Physics/robot_base_footprint_joint')
     if not footprint_joint.IsValid():
         raise RuntimeError('Imported base_footprint joint is missing from the stage.')
     UsdPhysics.Joint(footprint_joint).CreateJointEnabledAttr().Set(False)
+    footprint_joint.SetActive(False)
+
+    # The plus model needs an explicit base-to-arm physical connection before
+    # robot_top_cover loses its importer-created rigid body below.
+    if robot_model == 'rbkairos_plus':
+        _attach_arm_to_physical_base(stage, root_path)
 
     for link_name, joint_name in VISUAL_FIXED_LINKS:
         visual_link = stage.GetPrimAtPath(f'{footprint_path}/robot_base_link/{link_name}')
@@ -206,6 +334,7 @@ def _sanitize_imported_physics(stage, root_path):
             raise RuntimeError(f'Imported visual fixed link is missing: {link_name}')
         visual_link.RemoveAPI(UsdPhysics.RigidBodyAPI)
         UsdPhysics.Joint(fixed_joint).CreateJointEnabledAttr().Set(False)
+        fixed_joint.SetActive(False)
 
 
 def _configure_ros_graph(app, root_path, articulation_path, robot_id):
@@ -310,9 +439,16 @@ def main():
                 raise FileNotFoundError(f'Robot USD is missing: {asset}')
             print(f'RB-KAIROS: composing {asset.name}.')
             root_path = _create_robot(stage, args, asset)
+            print('RB-KAIROS: robot USD composed.', flush=True)
             _release_imported_root_joint(stage, root_path)
-            _sanitize_imported_physics(stage, root_path)
+            print('RB-KAIROS: imported root joint released.', flush=True)
+            _sanitize_imported_physics(stage, root_path, args.robot_model)
+            print('RB-KAIROS: imported physics sanitized.', flush=True)
             _configure_wheel_velocity_drives(stage, root_path)
+            print('RB-KAIROS: wheel drives configured.', flush=True)
+            if args.robot_model == 'rbkairos_plus':
+                _configure_arm_position_drives(stage, root_path)
+                print('RB-KAIROS: arm position drives configured.', flush=True)
             articulation_path = _find_articulation_root(stage, root_path)
             print(f'RB-KAIROS: using articulation root {articulation_path}.')
             _configure_ros_graph(app, root_path, articulation_path, args.robot_id)
@@ -323,6 +459,16 @@ def main():
         print('RB-KAIROS simulation running. Close the Isaac window or press Ctrl+C to stop.')
         while app.is_running():
             app.update()
+    except BaseException as error:
+        # Kit replaces Python's default exception hook and can otherwise hide
+        # failures that occur while composing a USD.  Emit the traceback while
+        # the logging and terminal streams are still alive, before app.close().
+        print(
+            f'RB-KAIROS: fatal runtime error ({type(error).__name__}): {error}',
+            flush=True,
+        )
+        traceback.print_exc()
+        raise
     finally:
         app.close()
 

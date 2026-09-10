@@ -35,7 +35,7 @@ def generate_launch_description():
         DeclareLaunchArgument('z', default_value='0.0'),
         DeclareLaunchArgument('yaw', default_value='0.0'),
         DeclareLaunchArgument('frame_prefix', default_value=[robot_id, '_']),
-        DeclareLaunchArgument('headless', default_value='true'),
+        DeclareLaunchArgument('headless', default_value='false'),
         DeclareLaunchArgument('run_rviz', default_value='true'),
         DeclareLaunchArgument(
             'isaac_sim_path', default_value='/home/robotnik/isaacsim',
