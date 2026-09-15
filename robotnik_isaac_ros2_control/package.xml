@@ -3,7 +3,7 @@
   <name>robotnik_isaac_ros2_control</name>
   <version>0.1.0</version>
   <description>Robot-agnostic ros2_control SystemInterface bridge for Isaac Sim.</description>
-  <maintainer email="ros-developers@robotnik.es">Robotnik Developers</maintainer>
+  <maintainer email="jlgalan@robotnik.es">Jose Luis Galán Avilés</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
