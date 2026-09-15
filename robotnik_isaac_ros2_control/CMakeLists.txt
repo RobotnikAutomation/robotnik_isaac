@@ -26,6 +26,20 @@ pluginlib_export_plugin_description_file(
   hardware_interface robotnik_isaac_ros2_control_plugins.xml
 )
 
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+  find_package(realtime_tools REQUIRED)
+  if(realtime_tools_VERSION VERSION_LESS "3.12.0")
+    message(WARNING
+      "Skipping ResourceManager test: hardware_interface 4.48 requires "
+      "realtime_tools >= 3.12.0 (found ${realtime_tools_VERSION}).")
+  else()
+    ament_add_gtest(test_generic_system test/test_generic_system.cpp)
+    target_link_libraries(test_generic_system ${PROJECT_NAME})
+    ament_target_dependencies(test_generic_system hardware_interface rclcpp realtime_tools)
+  endif()
+endif()
+
 install(
   TARGETS ${PROJECT_NAME}
   EXPORT export_${PROJECT_NAME}
@@ -34,7 +48,6 @@ install(
   RUNTIME DESTINATION bin
 )
 install(DIRECTORY include/ DESTINATION include)
-install(DIRECTORY urdf DESTINATION share/${PROJECT_NAME})
 install(
   FILES robotnik_isaac_ros2_control_plugins.xml
   DESTINATION share/${PROJECT_NAME}
