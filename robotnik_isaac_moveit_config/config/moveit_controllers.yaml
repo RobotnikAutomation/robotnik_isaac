@@ -16,9 +16,9 @@ moveit_simple_controller_manager:
     type: FollowJointTrajectory
     default: true
     joints:
-      - robot_arm_shoulder_pan_joint
-      - robot_arm_shoulder_lift_joint
-      - robot_arm_elbow_joint
-      - robot_arm_wrist_1_joint
-      - robot_arm_wrist_2_joint
-      - robot_arm_wrist_3_joint
+      - arm_shoulder_pan_joint
+      - arm_shoulder_lift_joint
+      - arm_elbow_joint
+      - arm_wrist_1_joint
+      - arm_wrist_2_joint
+      - arm_wrist_3_joint

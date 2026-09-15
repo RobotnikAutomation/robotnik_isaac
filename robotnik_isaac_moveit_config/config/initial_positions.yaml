@@ -1,9 +1,9 @@
 # Default initial positions for rbkairos_plus's ros2_control fake system
 
 initial_positions:
-  robot_arm_elbow_joint: 2.4125
-  robot_arm_shoulder_lift_joint: -2.4125
-  robot_arm_shoulder_pan_joint: 0
-  robot_arm_wrist_1_joint: -1.57
-  robot_arm_wrist_2_joint: -1.57
-  robot_arm_wrist_3_joint: 0
+  arm_elbow_joint: 2.4125
+  arm_shoulder_lift_joint: -2.4125
+  arm_shoulder_pan_joint: 0
+  arm_wrist_1_joint: -1.57
+  arm_wrist_2_joint: -1.57
+  arm_wrist_3_joint: 0

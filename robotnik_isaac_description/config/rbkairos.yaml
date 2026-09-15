@@ -1,11 +1,15 @@
 robot_model: rbkairos
 usd: assets/rbkairos/usd/rbkairos_base/rbkairos_base.usda
 base_frame: robot_base_footprint
+odom_frame: robot_odom
 wheel_radius: 0.11
 wheel_base: 0.458
 track_width: 0.47
-wheels:
+state_topic: isaac/joint_states
+command_topic: isaac/joint_command
+velocity_drive_joints:
   - robot_front_left_wheel_joint
   - robot_front_right_wheel_joint
   - robot_back_left_wheel_joint
   - robot_back_right_wheel_joint
+position_drive_targets: {}

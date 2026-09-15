@@ -2,8 +2,8 @@
 <robot name="rbkairos_plus" xmlns:xacro="http://wiki.ros.org/xacro">
   <!--
     MoveIt's planning model mirrors the sensor-free Isaac composition: one
-    RB-KAIROS base plus one UR10e.  The robot_ prefix is part of the joint/link
-    contract; robot_id is only a ROS namespace and must not alter these names.
+    RB-KAIROS base plus one UR10e. The base uses robot_ and the arm uses arm_,
+    matching the imported Isaac articulation. robot_id is only a ROS namespace.
   -->
   <xacro:arg name="ur_type" default="ur10e"/>
   <xacro:arg name="gazebo_ignition" default="false"/>
@@ -14,7 +14,7 @@
   <xacro:rbkairos prefix="robot_" gazebo_ignition="$(arg gazebo_ignition)" namespace="robot"/>
   <xacro:arm_ur
     ur_type="$(arg ur_type)"
-    frame_prefix="robot_arm_"
+    frame_prefix="arm_"
     parent="robot_top_cover"
     gazebo_ignition="$(arg gazebo_ignition)">
     <origin xyz="0 0 0" rpy="0 0 0"/>

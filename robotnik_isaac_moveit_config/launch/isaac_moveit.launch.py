@@ -63,6 +63,23 @@ def generate_launch_description():
         ],
     )
 
+    # Isaac's mobile-base controller publishes robot_odom ->
+    # robot_base_footprint.  The SRDF uses world as its external planning
+    # frame, so complete that TF chain without changing the general Robotnik
+    # bringup or its odometry frames.
+    world_to_odom = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='world_to_robot_odom',
+        arguments=[
+            '--x', '0', '--y', '0', '--z', '0',
+            '--roll', '0', '--pitch', '0', '--yaw', '0',
+            '--frame-id', 'world',
+            '--child-frame-id', 'robot_odom',
+        ],
+        output='log',
+    )
+
     rviz = Node(
         package='rviz2',
         executable='rviz2',
@@ -96,6 +113,7 @@ def generate_launch_description():
                 'moveit.rviz',
             ]),
         ),
+        world_to_odom,
         move_group,
         rviz,
     ])

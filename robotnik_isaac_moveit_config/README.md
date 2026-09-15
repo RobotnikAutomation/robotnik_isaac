@@ -14,11 +14,14 @@ modifica los launches generales de Robotnik.
 ## Diseño
 
 El Xacro local compone la base RB-KAIROS y el UR10e a partir de las macros de
-`robotnik_description`. Usa nombres fijos `robot_*` y `robot_arm_*`; el
+`robotnik_description`. Usa nombres fijos `robot_*` y `arm_*`; el
 argumento `robot_id` solo establece el namespace ROS. El SRDF conserva el
-grupo `arm`, con cadena de `robot_arm_base_link` a `robot_arm_tool0`, y fija la
+grupo `arm`, con cadena de `arm_base_link` a `arm_tool0`, y fija la
 raíz completa `robot_base_footprint` al frame externo `world`. El link
 `robot_base_link` permanece unido a la raíz por el joint fijo del modelo.
+El launch completa la cadena TF publicando la transformación estática
+`world -> robot_odom`; el controlador de la base aporta la transformación
+dinámica `robot_odom -> robot_base_footprint`.
 
 MoveIt usa `moveit_simple_controller_manager`, porque el controlador se crea
 y activa fuera de este paquete y ya expone una acción estándar
@@ -43,6 +46,28 @@ componentes concretos ya están enumerados. En Jazzy el paquete Pilz se llama
 `pilz_industrial_motion_planner`; no existe una clave rosdep llamada
 `moveit_planners_pilz_industrial_motion_planner`.
 
+Para habilitar `arm_controller` se actualizaron conjuntamente los paquetes
+ROS de control, evitando mezclar versiones ABI incompatibles:
+
+```text
+ros-jazzy-controller-manager               4.48.0
+ros-jazzy-controller-interface             4.48.0
+ros-jazzy-hardware-interface               4.48.0
+ros-jazzy-joint-trajectory-controller       4.42.1
+ros-jazzy-generate-parameter-library        0.7.6
+```
+
+La actualización utilizada fue:
+
+```bash
+sudo apt-get install -y --only-upgrade \
+  ros-jazzy-controller-manager \
+  ros-jazzy-controller-interface \
+  ros-jazzy-hardware-interface \
+  ros-jazzy-joint-trajectory-controller \
+  ros-jazzy-generate-parameter-library
+```
+
 La comprobación del workspace se realiza antes de instalar:
 
 ```bash
@@ -54,9 +79,9 @@ rosdep install --from-paths src/robotnik_isaac_sim --ignore-src -r -y
 
 El `source install/setup.bash` hace visible el paquete local
 `robotnik_description`, que vive fuera del subárbol pasado a `--from-paths` y
-no es una clave apt/rosdep. En el entorno de desarrollo usado para crear el
-paquete, la comprobación indicó que todas las dependencias estaban
-satisfechas, por lo que no fue necesario instalar paquetes apt adicionales.
+no es una clave apt/rosdep. Las dependencias estaban declaradas, pero fue
+necesario actualizar conjuntamente los paquetes de control anteriores para
+evitar un fallo ABI al cargar `JointTrajectoryController`.
 
 ## Reconstrucción
 
@@ -73,13 +98,29 @@ source install/setup.bash
 
 ## Ejecución
 
-Con el bringup RB-KAIROS+ y sus tres controladores ya activos:
+Terminal 1, bringup RB-KAIROS+ (la interfaz gráfica de Isaac está habilitada
+por defecto):
 
 ```bash
+source install/setup.bash
+ros2 launch robotnik_isaac_bringup spawn_robot.launch.py \
+  robot_model:=rbkairos_plus robot_id:=robot
+```
+
+Terminal 2, una vez que los tres controladores estén activos:
+
+```bash
+source install/setup.bash
 ros2 control list_controllers -c /robot/controller_manager
 ros2 action info /robot/arm_controller/follow_joint_trajectory
 ros2 launch robotnik_isaac_moveit_config isaac_moveit.launch.py robot_id:=robot
 ```
+
+En RViz, abrir `MotionPlanning`, seleccionar el grupo `arm`, elegir una meta
+articular o el estado nominal `test`, pulsar primero `Plan` y, tras revisar la
+trayectoria, `Execute`. `Plan & Execute` permite hacer ambos pasos juntos.
+La postura real debe actualizarse desde `/robot/joint_states`; no se emplea
+hardware falso.
 
 RViz puede omitirse para una prueba sin interfaz gráfica:
 
@@ -94,7 +135,7 @@ Prueba directa del controlador, sin MoveIt:
 ros2 action send_goal \
   /robot/arm_controller/follow_joint_trajectory \
   control_msgs/action/FollowJointTrajectory \
-  "{trajectory: {joint_names: [robot_arm_shoulder_pan_joint, robot_arm_shoulder_lift_joint, robot_arm_elbow_joint, robot_arm_wrist_1_joint, robot_arm_wrist_2_joint, robot_arm_wrist_3_joint], points: [{positions: [0.0, -1.2, 1.5, -1.57, -1.57, 0.0], time_from_start: {sec: 5, nanosec: 0}}]}}"
+  "{trajectory: {joint_names: [arm_shoulder_pan_joint, arm_shoulder_lift_joint, arm_elbow_joint, arm_wrist_1_joint, arm_wrist_2_joint, arm_wrist_3_joint], points: [{positions: [0.0, -1.2, 1.5, -1.57, -1.57, 0.0], time_from_start: {sec: 5, nanosec: 0}}]}}"
 ```
 
 ## Alcance
@@ -104,7 +145,6 @@ planificación de la base, pinza, percepción, sensores ni hardware real. El
 launch no arranca Isaac y requiere que `/robot/joint_states`, TF y la acción de
 `arm_controller` procedan del bringup RB-KAIROS+.
 
-El runtime debe publicar exactamente los seis nombres `robot_arm_*` usados por
-este paquete. No se ofrece compatibilidad ni traducción para assets antiguos
-que publiquen el brazo como `arm_*`; corregir esa composición pertenece al
-bringup/descripción Isaac y queda deliberadamente fuera de este paquete.
+El runtime debe publicar exactamente los seis nombres `arm_*` usados por este
+paquete. No se ofrece compatibilidad ni traducción para configuraciones
+antiguas que esperen el prefijo `robot_arm_*`.

@@ -2,7 +2,7 @@
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import EnvironmentVariable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 
 
@@ -14,15 +14,25 @@ def generate_launch_description():
     ])
     args = [
         DeclareLaunchArgument('world', default_value='empty'),
-        DeclareLaunchArgument('world_path', default_value=''),
+        DeclareLaunchArgument(
+            'world_path',
+            default_value=PathJoinSubstitution([
+                FindPackageShare('robotnik_isaac_bringup'), 'worlds', 'empty.usda',
+            ]),
+        ),
         DeclareLaunchArgument('headless', default_value='false'),
-        DeclareLaunchArgument('isaac_sim_path', default_value='/home/robotnik/isaacsim'),
+        DeclareLaunchArgument(
+            'isaac_sim_path',
+            default_value=EnvironmentVariable(
+                'ISAAC_SIM_PATH', default_value='/home/robotnik/isaacsim'),
+        ),
     ]
     world = ExecuteProcess(
         cmd=[PathJoinSubstitution([isaac_path, 'python.sh']), runtime,
              '--robot-id', 'world', '--robot-model', 'rbkairos',
              '--description-share', FindPackageShare('robotnik_isaac_description'),
              '--sensors-share', FindPackageShare('robotnik_isaac_sensors'),
+             '--world-path', LaunchConfiguration('world_path'),
              '--headless', headless, '--world-only'],
         output='screen',
     )

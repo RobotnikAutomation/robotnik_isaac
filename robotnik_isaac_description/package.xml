@@ -6,5 +6,10 @@
   <maintainer email="ros-developers@robotnik.es">Robotnik Developers</maintainer>
   <license>Apache-2.0</license>
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <!-- The Kairos integration URDFs instantiate this plugin.  The generic
+       plugin intentionally has no reverse dependency on this package. -->
+  <exec_depend>robotnik_isaac_ros2_control</exec_depend>
+  <test_depend>ament_cmake_pytest</test_depend>
+  <test_depend>python3-yaml</test_depend>
   <export><build_type>ament_cmake</build_type></export>
 </package>

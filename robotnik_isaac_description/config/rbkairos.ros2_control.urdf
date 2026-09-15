@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<robot name="rbkairos_isaac_control">
+  <!-- Kairos integration skeleton required by Jazzy's ros2_control URDF validation.
+       robot_state_publisher is isolated from joint_states in the launch, so
+       Isaac Sim remains the source of the robot's transform tree. -->
+  <link name="robot_base_link"/>
+  <link name="robot_front_left_wheel_link"/>
+  <link name="robot_front_right_wheel_link"/>
+  <link name="robot_back_left_wheel_link"/>
+  <link name="robot_back_right_wheel_link"/>
+
+  <joint name="robot_front_left_wheel_joint" type="continuous">
+    <parent link="robot_base_link"/>
+    <child link="robot_front_left_wheel_link"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+  <joint name="robot_front_right_wheel_joint" type="continuous">
+    <parent link="robot_base_link"/>
+    <child link="robot_front_right_wheel_link"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+  <joint name="robot_back_left_wheel_joint" type="continuous">
+    <parent link="robot_base_link"/>
+    <child link="robot_back_left_wheel_link"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+  <joint name="robot_back_right_wheel_joint" type="continuous">
+    <parent link="robot_base_link"/>
+    <child link="robot_back_right_wheel_link"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <ros2_control name="IsaacSystem" type="system">
+    <hardware>
+      <plugin>robotnik_isaac_ros2_control/IsaacSystem</plugin>
+      <param name="state_topic">isaac/joint_states</param>
+      <param name="command_topic">isaac/joint_command</param>
+      <param name="qos_depth">5</param>
+      <param name="state_qos_reliability">best_effort</param>
+      <param name="command_qos_reliability">reliable</param>
+      <param name="state_timeout">0.0</param>
+      <param name="require_all_joints">false</param>
+      <param name="reject_nonfinite_state">true</param>
+      <param name="enforce_command_limits">true</param>
+    </hardware>
+
+    <joint name="robot_front_left_wheel_joint">
+      <command_interface name="velocity">
+        <param name="min">-10.0</param>
+        <param name="max">10.0</param>
+        <param name="initial_value">0.0</param>
+      </command_interface>
+      <state_interface name="position"><param name="initial_value">0.0</param></state_interface>
+      <state_interface name="velocity"><param name="initial_value">0.0</param></state_interface>
+      <state_interface name="effort"><param name="initial_value">0.0</param></state_interface>
+    </joint>
+    <joint name="robot_front_right_wheel_joint">
+      <command_interface name="velocity">
+        <param name="min">-10.0</param>
+        <param name="max">10.0</param>
+        <param name="initial_value">0.0</param>
+      </command_interface>
+      <state_interface name="position"><param name="initial_value">0.0</param></state_interface>
+      <state_interface name="velocity"><param name="initial_value">0.0</param></state_interface>
+      <state_interface name="effort"><param name="initial_value">0.0</param></state_interface>
+    </joint>
+    <joint name="robot_back_left_wheel_joint">
+      <command_interface name="velocity">
+        <param name="min">-20.0</param>
+        <param name="max">20.0</param>
+        <param name="initial_value">0.0</param>
+      </command_interface>
+      <state_interface name="position"><param name="initial_value">0.0</param></state_interface>
+      <state_interface name="velocity"><param name="initial_value">0.0</param></state_interface>
+      <state_interface name="effort"><param name="initial_value">0.0</param></state_interface>
+    </joint>
+    <joint name="robot_back_right_wheel_joint">
+      <command_interface name="velocity">
+        <param name="min">-20.0</param>
+        <param name="max">20.0</param>
+        <param name="initial_value">0.0</param>
+      </command_interface>
+      <state_interface name="position"><param name="initial_value">0.0</param></state_interface>
+      <state_interface name="velocity"><param name="initial_value">0.0</param></state_interface>
+      <state_interface name="effort"><param name="initial_value">0.0</param></state_interface>
+    </joint>
+  </ros2_control>
+</robot>

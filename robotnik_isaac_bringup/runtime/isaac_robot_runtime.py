@@ -10,33 +10,8 @@ import math
 from pathlib import Path
 import traceback
 
+import yaml
 
-WHEEL_JOINTS = (
-    'robot_front_left_wheel_joint',
-    'robot_front_right_wheel_joint',
-    'robot_back_left_wheel_joint',
-    'robot_back_right_wheel_joint',
-)
-
-ARM_JOINTS = (
-    'arm_shoulder_pan_joint',
-    'arm_shoulder_lift_joint',
-    'arm_elbow_joint',
-    'arm_wrist_1_joint',
-    'arm_wrist_2_joint',
-    'arm_wrist_3_joint',
-)
-
-# Folded ``home`` pose shared with the isolated MoveIt SRDF.  ROS represents
-# revolute joints in radians; USD/PhysX angular drive attributes use degrees.
-ARM_HOME_POSITIONS_RAD = {
-    'arm_shoulder_pan_joint': 0.0,
-    'arm_shoulder_lift_joint': -2.4125,
-    'arm_elbow_joint': 2.4125,
-    'arm_wrist_1_joint': -1.57,
-    'arm_wrist_2_joint': -1.57,
-    'arm_wrist_3_joint': 0.0,
-}
 
 VISUAL_FIXED_LINKS = (
     ('robot_top_cover', 'robot_top_cover_joint'),
@@ -50,10 +25,11 @@ VISUAL_FIXED_LINKS = (
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--robot-id', required=True)
-    parser.add_argument('--robot-model', choices=('rbkairos', 'rbkairos_plus'), required=True)
+    parser.add_argument('--robot-model', required=True)
     parser.add_argument('--headless', choices=('true', 'false'), default='false')
     parser.add_argument('--description-share', required=True)
     parser.add_argument('--sensors-share', required=True)
+    parser.add_argument('--world-path', default='')
     parser.add_argument('--x', type=float, default=0.0)
     parser.add_argument('--y', type=float, default=0.0)
     # ``base_footprint`` is the wheel contact plane, therefore z=0 places
@@ -65,11 +41,32 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def _create_world(stage):
+def _load_model(description_share, robot_model):
+    """Load the registered model adapter; adding a model requires no bridge changes."""
+    config_path = Path(description_share).resolve() / 'config' / f'{robot_model}.yaml'
+    if not config_path.is_file():
+        raise FileNotFoundError(f'Robot model is not registered: {config_path}')
+    with config_path.open(encoding='utf-8') as stream:
+        model = yaml.safe_load(stream)
+    required = ('robot_model', 'usd', 'velocity_drive_joints', 'position_drive_targets')
+    missing = [key for key in required if key not in model]
+    if missing or model['robot_model'] != robot_model:
+        raise ValueError(f'Invalid model adapter {config_path}; missing/mismatched: {missing}')
+    return model
+
+
+def _create_world(stage, world_path=''):
     from pxr import Gf, Sdf, UsdGeom, UsdLux, UsdPhysics, UsdShade
 
     UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.z)
     UsdGeom.SetStageMetersPerUnit(stage, 1.0)
+    if world_path:
+        world_asset = Path(world_path).resolve()
+        if not world_asset.is_file():
+            raise FileNotFoundError(f'World USD is missing: {world_asset}')
+        environment = stage.DefinePrim('/World/environment', 'Xform')
+        if not environment.GetReferences().AddReference(str(world_asset)):
+            raise RuntimeError(f'Could not reference world USD: {world_asset}')
     scene = UsdPhysics.Scene.Define(stage, '/World/physicsScene')
     scene.CreateGravityDirectionAttr().Set(Gf.Vec3f(0.0, 0.0, -1.0))
     scene.CreateGravityMagnitudeAttr().Set(9.81)
@@ -151,7 +148,7 @@ def _find_articulation_root(stage, root_path):
     return str(articulation_roots[0].GetPath())
 
 
-def _configure_wheel_velocity_drives(stage, root_path):
+def _configure_velocity_drives(stage, root_path, joint_names):
     """Make the imported wheel drives respond to velocity targets.
 
     The converted USD declares each wheel's angular drive and its maximum
@@ -162,7 +159,7 @@ def _configure_wheel_velocity_drives(stage, root_path):
     """
     from pxr import UsdPhysics
 
-    for joint_name in WHEEL_JOINTS:
+    for joint_name in joint_names:
         joint_path = f'{root_path}/Physics/{joint_name}'
         joint = stage.GetPrimAtPath(joint_path)
         if not joint.IsValid():
@@ -176,7 +173,7 @@ def _configure_wheel_velocity_drives(stage, root_path):
         drive.CreateDampingAttr().Set(10000.0)
 
 
-def _configure_arm_position_drives(stage, root_path):
+def _configure_position_drives(stage, root_path, position_targets):
     """Start and hold the UR10e in its folded home pose.
 
     The URDF importer creates angular drives and effort limits for the arm but
@@ -190,7 +187,7 @@ def _configure_arm_position_drives(stage, root_path):
     """
     from pxr import Sdf, UsdPhysics
 
-    for joint_name in ARM_JOINTS:
+    for joint_name, home_radians in position_targets.items():
         joint_path = f'{root_path}/Physics/{joint_name}'
         joint = stage.GetPrimAtPath(joint_path)
         if not joint.IsValid():
@@ -200,7 +197,7 @@ def _configure_arm_position_drives(stage, root_path):
         drive.CreateTypeAttr().Set(UsdPhysics.Tokens.force)
         drive.CreateStiffnessAttr().Set(10000.0)
         drive.CreateDampingAttr().Set(1000.0)
-        home_degrees = math.degrees(ARM_HOME_POSITIONS_RAD[joint_name])
+        home_degrees = math.degrees(home_radians)
         drive.CreateTargetPositionAttr().Set(home_degrees)
         drive.CreateTargetVelocityAttr().Set(0.0)
         joint.CreateAttribute(
@@ -337,7 +334,7 @@ def _sanitize_imported_physics(stage, root_path, robot_model):
         fixed_joint.SetActive(False)
 
 
-def _configure_ros_graph(app, root_path, articulation_path, robot_id):
+def _configure_ros_graph(app, root_path, articulation_path, robot_id, model):
     """Create native ROS 2 control, clock, state and TF OmniGraph nodes."""
     import omni.graph.core as og
     import usdrt
@@ -384,14 +381,15 @@ def _configure_ros_graph(app, root_path, articulation_path, robot_id):
         ('subscribe_joint_command.outputs:jointNames', 'articulation_controller.inputs:jointNames'),
         ('subscribe_joint_command.outputs:positionCommand', 'articulation_controller.inputs:positionCommand'),
         ('subscribe_joint_command.outputs:velocityCommand', 'articulation_controller.inputs:velocityCommand'),
+        ('subscribe_joint_command.outputs:effortCommand', 'articulation_controller.inputs:effortCommand'),
     ]
     values = [
         ('subscribe_joint_command.inputs:nodeNamespace', robot_id),
-        ('subscribe_joint_command.inputs:topicName', 'isaac/joint_command'),
+        ('subscribe_joint_command.inputs:topicName', model['command_topic']),
         ('articulation_controller.inputs:robotPath', articulation_path),
         ('read_joint_state.inputs:prim', [usdrt.Sdf.Path(articulation_path)]),
         ('joint_state.inputs:nodeNamespace', robot_id),
-        ('joint_state.inputs:topicName', 'isaac/joint_states'),
+        ('joint_state.inputs:topicName', model['state_topic']),
         ('compute_tf.inputs:targetPrims', [usdrt.Sdf.Path(articulation_path)]),
         ('tf.inputs:nodeNamespace', robot_id),
     ]
@@ -405,6 +403,7 @@ def _configure_ros_graph(app, root_path, articulation_path, robot_id):
 
 def main():
     args = parse_arguments()
+    model = _load_model(args.description_share, args.robot_model)
     from isaacsim import SimulationApp
 
     app = SimulationApp({'headless': args.headless == 'true', 'sync_loads': True})
@@ -424,17 +423,16 @@ def main():
         print(f'RB-KAIROS: bridge frame 2 complete (Kit running={app.is_running()}).')
         if not app.is_running():
             raise RuntimeError('Isaac Sim stopped while enabling the ROS 2 bridge.')
-        description = Path(args.description_share)
+        description = Path(args.description_share).resolve()
         context = get_context()
         context.new_stage()
         stage = context.get_stage()
         if stage is None:
             raise RuntimeError('Isaac Sim did not create the simulation stage.')
         print('RB-KAIROS: creating world.')
-        _create_world(stage)
+        _create_world(stage, args.world_path)
         if not args.world_only:
-            asset_name = 'rbkairos_base' if args.robot_model == 'rbkairos' else 'rbkairos_plus'
-            asset = description / 'assets' / 'rbkairos' / 'usd' / asset_name / f'{asset_name}.usda'
+            asset = description / model['usd']
             if not asset.is_file():
                 raise FileNotFoundError(f'Robot USD is missing: {asset}')
             print(f'RB-KAIROS: composing {asset.name}.')
@@ -444,14 +442,14 @@ def main():
             print('RB-KAIROS: imported root joint released.', flush=True)
             _sanitize_imported_physics(stage, root_path, args.robot_model)
             print('RB-KAIROS: imported physics sanitized.', flush=True)
-            _configure_wheel_velocity_drives(stage, root_path)
+            _configure_velocity_drives(stage, root_path, model['velocity_drive_joints'])
             print('RB-KAIROS: wheel drives configured.', flush=True)
-            if args.robot_model == 'rbkairos_plus':
-                _configure_arm_position_drives(stage, root_path)
+            if model['position_drive_targets']:
+                _configure_position_drives(stage, root_path, model['position_drive_targets'])
                 print('RB-KAIROS: arm position drives configured.', flush=True)
             articulation_path = _find_articulation_root(stage, root_path)
             print(f'RB-KAIROS: using articulation root {articulation_path}.')
-            _configure_ros_graph(app, root_path, articulation_path, args.robot_id)
+            _configure_ros_graph(app, root_path, articulation_path, args.robot_id, model)
             print('RB-KAIROS: robot and ROS graph configured.')
         timeline = omni.timeline.get_timeline_interface()
         timeline.play()

@@ -6,8 +6,11 @@ interface here makes KAIROS and KAIROS+ launch-compatible from day one.
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess, LogInfo, RegisterEventHandler
+from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessExit
-from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import (
+    Command, EnvironmentVariable, LaunchConfiguration, PathJoinSubstitution, PythonExpression,
+)
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterFile, ParameterValue
 from launch_ros.substitutions import FindPackageShare
@@ -21,6 +24,7 @@ def generate_launch_description():
     isaac_sim_path = LaunchConfiguration('isaac_sim_path')
     description_share = FindPackageShare('robotnik_isaac_description')
     sensor_share = FindPackageShare('robotnik_isaac_sensors')
+    bringup_share = FindPackageShare('robotnik_isaac_bringup')
     runtime = PathJoinSubstitution([
         FindPackageShare('robotnik_isaac_bringup'), 'runtime', 'isaac_robot_runtime.py',
     ])
@@ -38,8 +42,15 @@ def generate_launch_description():
         DeclareLaunchArgument('headless', default_value='false'),
         DeclareLaunchArgument('run_rviz', default_value='true'),
         DeclareLaunchArgument(
-            'isaac_sim_path', default_value='/home/robotnik/isaacsim',
-            description='Isaac Sim installation directory; override per host.',
+            'world_path',
+            default_value=PathJoinSubstitution([bringup_share, 'worlds', 'empty.usda']),
+            description='USD world layer referenced below /World/environment.',
+        ),
+        DeclareLaunchArgument(
+            'isaac_sim_path',
+            default_value=EnvironmentVariable(
+                'ISAAC_SIM_PATH', default_value='/home/robotnik/isaacsim'),
+            description='Isaac Sim directory; defaults to ISAAC_SIM_PATH, then the legacy path.',
         ),
     ]
 
@@ -54,12 +65,13 @@ def generate_launch_description():
             '--frame-prefix', frame_prefix,
             '--description-share', description_share,
             '--sensors-share', sensor_share,
+            '--world-path', LaunchConfiguration('world_path'),
         ],
         output='screen',
     )
     control_description = PathJoinSubstitution([
-        FindPackageShare('robotnik_isaac_ros2_control'), 'urdf',
-        'rbkairos.ros2_control.urdf',
+        description_share, 'config',
+        [robot_model, '.ros2_control.urdf'],
     ])
     controller_config = PathJoinSubstitution([
         FindPackageShare('robotnik_isaac_bringup'), 'config',
@@ -78,7 +90,10 @@ def generate_launch_description():
     robot_state_publisher = Node(
         package='robot_state_publisher', executable='robot_state_publisher',
         namespace=robot_id,
-        remappings=[('joint_states', 'description_joint_states_unused')],
+        remappings=[
+            ('joint_states', 'description_joint_states_unused'),
+            ('robot_description', 'control_robot_description'),
+        ],
         parameters=[{
             'robot_description': robot_description,
             'use_sim_time': True,
@@ -88,6 +103,7 @@ def generate_launch_description():
     controller_manager = Node(
         package='controller_manager', executable='ros2_control_node',
         namespace=robot_id,
+        remappings=[('robot_description', 'control_robot_description')],
         parameters=[controller_config, controller_profile],
         output='screen',
     )
@@ -114,6 +130,20 @@ def generate_launch_description():
         ],
         output='screen',
     )
+    arm_controller = Node(
+        package='controller_manager', executable='spawner', namespace=robot_id,
+        arguments=[
+            '--controller-manager-timeout', '60',
+            '--service-call-timeout', '60',
+            '--switch-timeout', '60',
+            'arm_controller',
+            '--controller-manager', controller_manager_name,
+        ],
+        condition=IfCondition(PythonExpression([
+            "'", robot_model, "' == 'rbkairos_plus'",
+        ])),
+        output='screen',
+    )
 
     def spawn_base_after_joint_states(event, _context):
         if event.returncode == 0:
@@ -128,7 +158,22 @@ def generate_launch_description():
             on_exit=spawn_base_after_joint_states,
         )
     )
+
+    def spawn_arm_after_base(event, _context):
+        if event.returncode == 0:
+            return [arm_controller]
+        return [LogInfo(
+            msg='ERROR: robotnik_base_control failed; arm_controller will not be spawned.',
+        )]
+
+    spawn_arm_after_base = RegisterEventHandler(
+        OnProcessExit(
+            target_action=robotnik_base_controller,
+            on_exit=spawn_arm_after_base,
+        )
+    )
     return LaunchDescription(arguments + [
         isaac, robot_state_publisher, controller_manager,
-        spawn_base_after_joint_states, joint_state_broadcaster,
+        spawn_base_after_joint_states, spawn_arm_after_base,
+        joint_state_broadcaster,
     ])
