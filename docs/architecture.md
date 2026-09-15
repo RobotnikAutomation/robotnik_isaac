@@ -1,9 +1,10 @@
-# Robotnik Isaac architecture and extraction boundary
+# Robotnik Isaac architecture and repository boundary
 
-This document records the implemented boundary while the generic package still
-shares the `robotnik_isaac_sim` Git repository. The future integration
-repository is named `robotnik_isaac`; renaming or history extraction is not
-part of this migration.
+This document describes the implemented architecture of the `robotnik_isaac`
+repository. The generic `robotnik_isaac_ros2_control` package has already been
+separated into its own repository and is included here as a Git submodule at
+`robotnik_isaac_ros2_control/`. It can also be checked out independently in a
+ROS 2 workspace.
 
 ## Responsibility matrix
 
@@ -67,24 +68,23 @@ Existing package and launch names remain valid. A later major release should
 move it to an examples/benchmarks repository after one deprecation release;
 renaming it now would break users for no benefit to the common runtime.
 
-## Distribution and future Git extraction
+## Repository separation and distribution
 
-No `.gitmodules` is added yet: there is no independent remote or immutable
-commit to pin, and pointing a submodule back into the current repository would
-not be reproducible. Once the control directory is extracted, add it at
-`vendor/robotnik_isaac_ros2_control`, use a release tag plus recorded commit,
-and never track a moving branch in release manifests. Development checkouts may
-use a `.repos` file instead. Released `robotnik_isaac` packages should prefer a
-rosdep-resolvable binary dependency; the submodule is a source-development
-fallback, not nested package content in a Debian release.
+`robotnik_isaac_ros2_control` is maintained in its own repository and is
+included in this repository through `.gitmodules` for source-based development.
+The submodule records an exact commit, while the `jazzy_devel` branch is the
+development target. Release manifests must pin a release tag or immutable
+commit rather than a moving branch. The package remains independent of Isaac
+Sim, Robotnik descriptions, controllers, MoveIt and USD, so it can be built and
+tested on supported ROS 2 distributions without Isaac Sim.
 
-The independent repository needs Apache-2.0 license and copyright files,
-README, changelog, semantic tags and a compatibility matrix. CI should build on
-supported ROS distributions without Isaac; load the plugin through pluginlib;
-inject complete, partial, duplicate, stale and non-finite JointState messages;
-verify mixed interface output and namespace isolation; and run URDF launch smoke
-tests. An Isaac-enabled nightly job should validate stock bridge node ports,
-base motion and arm trajectory execution.
+The independent repository provides its own Apache-2.0 license and copyright
+files, README, changelog, semantic tags and compatibility coverage. Its CI
+should load the plugin through pluginlib, test complete and partial
+`JointState` messages, duplicate and non-finite values, mixed interface output
+and namespace isolation. Isaac-enabled validation belongs to the integration
+repository and should cover stock bridge node ports, base motion and arm
+trajectory execution.
 
 ## Compatibility and diagnostics
 
