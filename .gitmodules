@@ -1,0 +1,4 @@
+[submodule "robotnik_isaac_ros2_control"]
+	path = robotnik_isaac_ros2_control
+	url = https://github.com/RobotnikAutomation/robotnik_isaac_ros2_control.git
+	branch = jazzy_devel
