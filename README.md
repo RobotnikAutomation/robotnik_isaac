@@ -3,6 +3,12 @@
 Isaac Sim-specific simulation packages.  These packages deliberately do not
 modify `robotnik_description`, `robotnik_sensors` or Gazebo packages.
 
+> **Development disclaimer:** This integration is currently under active
+> development and is not yet fully functional with the complete simulation
+> system. The `isaac_ros2_control` integration layer is also being developed
+> privately and will be used to connect the different components into a
+> complete system.
+
 ## Packages
 
 | Package | Responsibility |
