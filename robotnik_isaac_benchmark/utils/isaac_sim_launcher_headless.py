@@ -1,8 +1,39 @@
+import os
+
+
+def _benchmark_gpu_index():
+    value = os.environ.get("ISAAC_BENCHMARK_GPU", "0")
+    try:
+        index = int(value)
+    except ValueError as exc:
+        raise ValueError(
+            "ISAAC_BENCHMARK_GPU must be a non-negative integer"
+        ) from exc
+    if index < 0:
+        raise ValueError("ISAAC_BENCHMARK_GPU must be a non-negative integer")
+    return index
+
+
+gpu_index = _benchmark_gpu_index()
+
 from isaacsim import SimulationApp
 simulation_app = SimulationApp(
     {
         "headless": True,
         "sync_loads": True,
+        # The hidden default viewport is unrelated to camera/LiDAR render
+        # products.  Stop updating it while preserving every benchmark sensor.
+        "disable_viewport_updates": True,
+        # Keep renderer and GPU selection identical to the direct Kit GUI path.
+        "active_gpu": gpu_index,
+        "physics_gpu": gpu_index,
+        "multi_gpu": False,
+        "max_gpu_count": 1,
+        "renderer": "RealTimePathTracing",
+        "anti_aliasing": 3,
+        "max_bounces": 3,
+        "max_specular_transmission_bounces": 3,
+        "max_volume_bounces": 15,
         # Do not replay or upload crash dumps left by an earlier iteration.
         # Crash reporting for a new failure remains enabled.
         "extra_args": ["--/crashreporter/skipOldDumpUpload=1"],

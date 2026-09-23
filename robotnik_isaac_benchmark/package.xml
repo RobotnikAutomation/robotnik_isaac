@@ -3,7 +3,7 @@
 <package format="3">
   <name>isaac_sim</name>
   <version>0.0.0</version>
-  <description>Legacy RB-Watcher Isaac Sim benchmark retained during the Robotnik Isaac migration.</description>
+  <description>ROS 2 launch and runtime assets for Robotnik Isaac Sim benchmarks.</description>
   <maintainer email="rvasquez@robotnik.es">robotnik</maintainer>
   <license>Apache-2.0</license>
 

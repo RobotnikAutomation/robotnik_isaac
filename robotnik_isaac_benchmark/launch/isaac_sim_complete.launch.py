@@ -8,6 +8,20 @@ from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 
+def _benchmark_gpu_index():
+    """Return the single GPU reserved for a reproducible Isaac benchmark."""
+    value = os.environ.get("ISAAC_BENCHMARK_GPU", "0")
+    try:
+        index = int(value)
+    except ValueError as exc:
+        raise ValueError(
+            "ISAAC_BENCHMARK_GPU must be a non-negative integer"
+        ) from exc
+    if index < 0:
+        raise ValueError("ISAAC_BENCHMARK_GPU must be a non-negative integer")
+    return index
+
+
 def _rviz_environment():
     """Keep Snap-injected desktop libraries out of the system RViz process."""
     environment = {}
@@ -93,10 +107,16 @@ def generate_launch_description():
         'utils/isaac_sim_launcher.py'
     ])
 
-    isaac_sim_root = os.path.expanduser("~/isaacsim")
+    isaac_sim_root = os.path.abspath(
+        os.path.expanduser(os.environ.get("ISAAC_SIM_ROOT", "~/isaacsim"))
+    )
+    gpu_index = _benchmark_gpu_index()
     isaac_environment = {
         'NUM_ROBOTS': num_robots,
         'WORLD_FILE': world_file,
+        # Keep both launch paths on the same physical GPU.  SimulationApp uses
+        # multi-GPU by default, whereas a direct Kit launch does not specify it.
+        'ISAAC_BENCHMARK_GPU': str(gpu_index),
         # isaac-sim.sh supplied this default before we switched to Kit's base
         # GUI experience.  Keep the same ROS middleware selection.
         'RMW_IMPLEMENTATION': os.environ.get(
@@ -118,6 +138,16 @@ def generate_launch_description():
              os.path.join(isaac_sim_root, "apps", "isaacsim.exp.base.kit"),
              "--enable", "isaacsim.ros2.bridge",
              "--/crashreporter/skipOldDumpUpload=1",
+             "--/renderer/multiGpu/enabled=false",
+             f"--/renderer/multiGpu/maxGpuCount=1",
+             f"--/renderer/activeGpu={gpu_index}",
+             f"--/physics/cudaDevice={gpu_index}",
+             # Match SimulationApp's explicit real-time path-tracing profile.
+             "--/rtx/rendermode=RealTimePathTracing",
+             "--/rtx/post/aa/op=3",
+             "--/rtx/rtpt/maxBounces=3",
+             "--/rtx/rtpt/maxSpecularAndTransmissionBounces=3",
+             "--/rtx/rtpt/maxVolumeBounces=15",
              "--exec", autorun_script
          ],
          output="screen",
@@ -128,13 +158,17 @@ def generate_launch_description():
 
     isaac_sim_headless = ExecuteProcess(
         cmd=[
-            os.path.expanduser("~/isaacsim/python.sh"),
+            os.path.join(isaac_sim_root, "python.sh"),
             headless_script
         ],
         output="screen",
         additional_env={
             'NUM_ROBOTS': num_robots,
-            'WORLD_FILE': world_file
+            'WORLD_FILE': world_file,
+            'ISAAC_BENCHMARK_GPU': str(gpu_index),
+            'RMW_IMPLEMENTATION': os.environ.get(
+                'RMW_IMPLEMENTATION', 'rmw_fastrtps_cpp'
+            ),
         },
         on_exit=Shutdown(reason="Isaac Sim headless process exited"),
         condition = IfCondition(headless)
