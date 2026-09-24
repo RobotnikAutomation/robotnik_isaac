@@ -105,15 +105,34 @@ def open_world(app, world_path):
 
 
 def _set_robot_namespace(robot_root, robot_name):
-    """Give every ROS node except the global clock a per-robot namespace."""
+    """Namespace robot interfaces while keeping the shared TF topics global."""
     from pxr import Usd
 
     for prim in Usd.PrimRange(robot_root):
         if "/Graph/ROS2_Clock/" in str(prim.GetPath()):
             continue
+
+        # RViz and tf2 subscribe to the canonical global topics.  An absolute
+        # topic name is required here because the asset's TF publishers also
+        # receive the per-robot node namespace below.  Leaving their default
+        # relative names moves the complete world-rooted tree to
+        # /<robot>/tf[_static], where the benchmark RViz never sees it.
+        is_transform_publisher = "transform_tree" in prim.GetName()
+        topic = prim.GetAttribute("inputs:topicName")
+        if topic.IsValid() and is_transform_publisher:
+            topic_name = topic.Get()
+            # Isaac uses a null authored value for the default relative `tf`
+            # topic.  The static publishers in this asset already author
+            # `/tf_static`, so preserve that value while making the default
+            # dynamic topic absolute as well.
+            topic.Set(f"/{topic_name}" if topic_name else "/tf")
+
         namespace = prim.GetAttribute("inputs:nodeNamespace")
         if namespace.IsValid():
-            namespace.Set(robot_name)
+            # Keeping the TF nodes outside the robot namespace also covers
+            # Isaac nodes whose topicName input is null and therefore cannot
+            # be made absolute reliably through a referenced USD override.
+            namespace.Set("" if is_transform_publisher else robot_name)
 
 
 def _deactivate_legacy_sensor_graphs(stage, body_path, robot_index):
@@ -291,6 +310,82 @@ def _validate_lidar_emitter_arrays(prim, target_emitters):
             )
 
 
+def _create_static_tf_graph(
+    app, graph_path, parent_frame, child_frame, translation, rotation
+):
+    """Publish one static transform through Isaac's ROS 2 bridge."""
+    import omni.graph.core as og
+
+    keys = og.Controller.Keys
+    graph, _, _, _ = og.Controller.edit(
+        {
+            "graph_path": graph_path,
+            "evaluator_name": "execution",
+            "pipeline_stage": og.GraphPipelineStage.GRAPH_PIPELINE_STAGE_SIMULATION,
+        },
+        {
+            keys.CREATE_NODES: [
+                ("on_tick", "omni.graph.action.OnTick"),
+                ("read_sim_time", "isaacsim.core.nodes.IsaacReadSimulationTime"),
+                ("publish_tf", "isaacsim.ros2.bridge.ROS2PublishRawTransformTree"),
+            ],
+            keys.CONNECT: [
+                ("on_tick.outputs:tick", "publish_tf.inputs:execIn"),
+                ("read_sim_time.outputs:simulationTime", "publish_tf.inputs:timeStamp"),
+            ],
+            keys.SET_VALUES: [
+                ("publish_tf.inputs:topicName", "/tf_static"),
+                ("publish_tf.inputs:parentFrameId", parent_frame),
+                ("publish_tf.inputs:childFrameId", child_frame),
+                (
+                    "publish_tf.inputs:translation",
+                    [float(value) for value in translation],
+                ),
+                (
+                    "publish_tf.inputs:rotation",
+                    [float(value) for value in rotation],
+                ),
+                ("publish_tf.inputs:staticPublisher", True),
+            ],
+        },
+    )
+    og.Controller.evaluate_sync(graph)
+    app.update()
+    app.update()
+    return graph
+
+
+def _create_static_laser_tf_graph(app, stage, body_path, graph_path):
+    """Publish the laser link's authored pose through Isaac's ROS 2 bridge."""
+    from pxr import Usd, UsdGeom
+
+    base_link_path = f"{body_path}/base_link"
+    laser_link_path = f"{base_link_path}/laser_link"
+    base_link = stage.GetPrimAtPath(base_link_path)
+    laser_link = stage.GetPrimAtPath(laser_link_path)
+    if not base_link.IsValid() or not laser_link.IsValid():
+        raise RuntimeError(
+            "Cannot publish laser TF: missing USD prim(s) "
+            f"{base_link_path}, {laser_link_path}"
+        )
+
+    # Derive the relative pose from the composed stage.  Keeping the USD as
+    # the source of truth avoids duplicating the sensor mounting transform.
+    time_code = Usd.TimeCode.Default()
+    base_world = UsdGeom.Xformable(base_link).ComputeLocalToWorldTransform(time_code)
+    laser_world = UsdGeom.Xformable(laser_link).ComputeLocalToWorldTransform(time_code)
+    base_to_laser = base_world.GetInverse() * laser_world
+    translation = base_to_laser.ExtractTranslation()
+    quaternion = base_to_laser.ExtractRotationQuat()
+    imaginary = quaternion.GetImaginary()
+    rotation = [
+        imaginary[0], imaginary[1], imaginary[2], quaternion.GetReal()
+    ]
+    return _create_static_tf_graph(
+        app, graph_path, "base_link", "laser_link", translation, rotation
+    )
+
+
 def _create_lidar_publisher(app, body_path, namespace):
     """Create a 16 x 1800, 10 Hz OmniLidar and its ROS writer."""
     from isaacsim.sensors.experimental.rtx import Lidar, LidarSensor
@@ -431,7 +526,19 @@ def spawn_and_configure_robots(app, stage, model_path, num_robots):
         if not body.IsValid():
             raise RuntimeError(f"Robot model root is missing after composition: {body_path}")
 
-    sensor_handles = []
+    # The benchmark RViz uses `world` as its fixed frame, while the imported
+    # controller's dynamic tree starts at `odom`.  Publish the missing common
+    # root explicitly; static TF is independent of simulation time.
+    sensor_handles = [
+        _create_static_tf_graph(
+            app,
+            "/World/benchmark_world_tf",
+            "world",
+            "odom",
+            [0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        )
+    ]
     for _index, robot_name, container_path, body_path in robot_layout:
         graph_root = f"{container_path}/benchmark_sensor_graphs"
         stage.DefinePrim(graph_root, "Scope")
@@ -450,6 +557,11 @@ def spawn_and_configure_robots(app, stage, model_path, num_robots):
             "front_camera_link",
             *CAMERA_A_RESOLUTION,
             False,
+        )
+        sensor_handles.append(
+            _create_static_laser_tf_graph(
+                app, stage, body_path, f"{graph_root}/laser_tf"
+            )
         )
         _create_camera_publisher(
             app,
