@@ -1,7 +1,15 @@
-#bin/bash
+#!/usr/bin/env bash
 
-pushd "$(dirname "${BASH_SOURCE[0]}")/../../.." > /dev/null
-ROOT_DIR="$(pwd)"
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BENCHMARK_ROOT="${BENCHMARK_ROOT:-$(cd "${SCRIPT_DIR}/../../../../.." && pwd)/robotnik_sim_benchmark}"
+
+if [[ ! -f "${BENCHMARK_ROOT}/scripts/execute/run_benchmark.py" ]]; then
+    echo "Benchmark repository not found: ${BENCHMARK_ROOT}" >&2
+    echo "Set BENCHMARK_ROOT to the robotnik_sim_benchmark checkout." >&2
+    exit 1
+fi
 
 print_info() {
     local message="$@"
@@ -30,9 +38,8 @@ isaac_benchmark() {
 
     sleep 0.5
 
-    python3 scripts/benchmark_simulator.py \
+    python3 "${BENCHMARK_ROOT}/scripts/execute/run_benchmark.py" \
         --category "$category" --iterations "1" --iteration_time "30" "isaac_sim" \
-        --image_topic front_rgbd_camera/color/image_raw \
         --ros_args "num_robots:=$num_robots" "world_file:=$world_file" "run_rviz:=$run_rviz"
 }
 
@@ -72,7 +79,3 @@ isaac_benchmark category=11 num_robots=2 world_file="simple_world.usd" run_rviz=
 
 print_info "three_robot_simple_world_rviz"
 isaac_benchmark category=12 num_robots=3 world_file="simple_world.usd" run_rviz="true"
-
-
-popd > /dev/null
-
