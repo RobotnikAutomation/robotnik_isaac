@@ -9,6 +9,7 @@
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
   <exec_depend>robotnik_isaac_description</exec_depend>
+  <exec_depend>robotnik_isaac_grippers</exec_depend>
   <exec_depend>robotnik_isaac_sensors</exec_depend>
   <exec_depend>robotnik_isaac_ros2_control</exec_depend>
   <exec_depend>robotnik_controllers</exec_depend>

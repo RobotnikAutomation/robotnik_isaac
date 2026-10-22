@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<robot name="onrobot_2fg7_attachment" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:arg name="onrobot_macro" default=""/>
+  <xacro:include filename="$(arg onrobot_macro)"/>
+
+  <!-- Isaac publishes the arm frame and finger_stroke from its composed USD. -->
+  <link name="arm_tool0"/>
+  <xacro:onrobot_2fg7
+    parent="arm_tool0"
+    origin_xyz="0 0 0.08"
+    origin_rpy="0 0 0"
+    include_ros2_control="false"/>
+</robot>

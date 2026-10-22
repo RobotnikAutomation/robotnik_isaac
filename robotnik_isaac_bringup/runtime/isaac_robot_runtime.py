@@ -1,13 +1,10 @@
-"""Isaac-native RB-KAIROS runtime.
-
-The runtime only loads imported USD articulations from Robotnik Isaac packages.
-It creates the PhysX scene and ROS graph at runtime so every robot instance
-receives an independent namespace and pose.
-"""
+"""Isaac-native RB-KAIROS runtime with optional generic stage extensions."""
 
 import argparse
+import importlib.util
 import math
 from pathlib import Path
+import sys
 import traceback
 
 import yaml
@@ -26,6 +23,8 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--robot-id', required=True)
     parser.add_argument('--robot-model', required=True)
+    parser.add_argument('--stage-extension', default='')
+    parser.add_argument('--stage-extension-model', default='')
     parser.add_argument('--headless', choices=('true', 'false'), default='false')
     parser.add_argument('--description-share', required=True)
     parser.add_argument('--sensors-share', required=True)
@@ -39,6 +38,26 @@ def parse_arguments():
     parser.add_argument('--frame-prefix', default='robot_')
     parser.add_argument('--world-only', action='store_true')
     return parser.parse_args()
+
+
+def _load_stage_extension(extension_path):
+    """Load an optional package-owned scene composition adapter."""
+    if not extension_path:
+        return None
+    path = Path(extension_path).resolve()
+    if not path.is_file():
+        raise FileNotFoundError(f'Stage extension module is missing: {path}')
+    if str(path.parent) not in sys.path:
+        sys.path.insert(0, str(path.parent))
+    spec = importlib.util.spec_from_file_location('robotnik_stage_extension', path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f'Could not load stage extension module: {path}')
+    extension = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(extension)
+    for function in ('validate', 'compose'):
+        if not callable(getattr(extension, function, None)):
+            raise TypeError(f'Stage extension {path} must define {function}().')
+    return extension
 
 
 def _load_model(description_share, robot_model):
@@ -403,6 +422,12 @@ def _configure_ros_graph(app, root_path, articulation_path, robot_id, model):
 
 def main():
     args = parse_arguments()
+    extension = _load_stage_extension(args.stage_extension)
+    if args.stage_extension_model and extension is None:
+        raise ValueError('stage_extension_model requires a stage_extension module.')
+    extension_state = extension.validate(
+        args.robot_model, args.stage_extension_model, args.description_share,
+    ) if extension else None
     model = _load_model(args.description_share, args.robot_model)
     from isaacsim import SimulationApp
 
@@ -442,6 +467,9 @@ def main():
             print('RB-KAIROS: imported root joint released.', flush=True)
             _sanitize_imported_physics(stage, root_path, args.robot_model)
             print('RB-KAIROS: imported physics sanitized.', flush=True)
+            if extension is not None:
+                extension.compose(stage, root_path, extension_state)
+                print('RB-KAIROS: stage extension composed.', flush=True)
             _configure_velocity_drives(stage, root_path, model['velocity_drive_joints'])
             print('RB-KAIROS: wheel drives configured.', flush=True)
             if model['position_drive_targets']:

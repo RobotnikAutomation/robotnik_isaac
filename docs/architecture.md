@@ -13,8 +13,9 @@ ROS 2 workspace.
 | Generic ros2_control core and JointState protocol adapter | `robotnik_isaac_ros2_control` | `include/`, `src/`, plugin XML |
 | Per-robot ros2_control declarations, joint order, interfaces and limits | `robotnik_isaac_description` | `config/*.ros2_control.urdf` |
 | USD/URDF assets, model registry, import and metadata | `robotnik_isaac_description` | `assets/`, `urdf_templates/`, `scripts/`, `config/*.yaml` |
-| Isaac runtime, graph construction and model-specific PhysX sanitation | `robotnik_isaac_bringup` | `runtime/isaac_robot_runtime.py` |
-| Stable launch surface, controller composition and TF | `robotnik_isaac_bringup` | `launch/`, `config/` |
+| Isaac runtime, graph construction, model-specific PhysX sanitation and generic stage extension loading | `robotnik_isaac_bringup` | `runtime/` |
+| Stable robot launch surface and controller composition | `robotnik_isaac_bringup` | `launch/`, `config/` |
+| Gripper launch, descriptions and vendor asset adapters | `robotnik_isaac_grippers` | `robotnik_isaac_grippers/` |
 | Sensor profiles | `robotnik_isaac_sensors` | `config/` |
 | Isaac-specific MoveIt adaptation | `robotnik_isaac_moveit_config` | all package files |
 | Benchmarking integration | `robotnik_sim_benchmarking` owns the `robotnik_isaac_benchmark/` directory, whose ROS package is named `isaac_sim` | outside this simulation system |
@@ -69,6 +70,19 @@ does not load them in place of the USD runtime model. In short, USD defines
 what Isaac simulates, while the runtime URDF defines what ROS 2 controllers
 can observe and command. The model YAML connects the runtime to its USD and
 declares the associated drive and topic configuration.
+
+When `gripper_model:=2fg7` is selected for `rbkairos_plus`,
+`robotnik_isaac_grippers` references the OnRobot USD beneath the UR10e
+`arm_tool0` with the documented 80 mm mount offset. Its fixed root joint is
+connected to the wrist body through a fixed joint under the robot physics
+scope, and the standalone gripper mount joint/root schemas are disabled or
+removed so the KAIROS+ remains one physics articulation. These changes exist
+only in the in-memory stage; the imported OnRobot repositories are not
+modified. A separate lightweight URDF description publishes gripper frames
+prefixed by `robot_id` and consumes the simulated `finger_stroke` state.
+The physical joint name remains unchanged. No gripper control interfaces or
+MoveIt planning group are added in this phase. With the default empty
+`gripper_model`, neither the USD nor URDF gripper description is launched.
 
 ## Kairos contract and consistency
 

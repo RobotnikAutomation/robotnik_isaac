@@ -24,6 +24,7 @@ packages for that integration.
 | `robotnik_isaac_description` | Robot USD/URDF assets, model configuration and robot-specific control declarations. |
 | `robotnik_isaac_sensors` | Sensor profiles and ROS topic configuration. |
 | `robotnik_isaac_bringup` | Isaac runtime, worlds, robot launch and controller startup. |
+| `robotnik_isaac_grippers` | Robotnik-owned gripper launches, descriptions and Isaac scene extensions; currently integrates the OnRobot 2FG7. |
 | `robotnik_isaac_moveit_config` | Optional MoveIt 2 setup for the RB-KAIROS+ UR10e arm. |
 | `robotnik_isaac_ros2_control` | Generic Isaac joint bridge, included as a Git submodule. |
 
@@ -78,14 +79,22 @@ Run from the workspace root:
 cd ~/robotnik_isaac_ws
 git -C src/robotnik_isaac submodule update --init --recursive
 vcs import src < src/robotnik_isaac/repos/onrobot.repos
-git -C src/onrobot-isaacsim lfs pull
+git -C src/onrobot/onrobot-isaacsim lfs pull
 ```
 
-The VCS manifest imports OnRobot as workspace siblings, not Git submodules.
+The VCS manifest imports the OnRobot repositories into `src/onrobot/`, next
+to the `src/robotnik_isaac/` repository. The Robotnik-owned gripper package
+`robotnik_isaac_grippers` lives inside `src/robotnik_isaac/`. The OnRobot
+repositories are workspace checkouts, not Git submodules.
+For a workspace that already has them at `src/onrobot-isaacsim` and
+`src/onrobot-ros2`, move those directories under `src/onrobot/` before
+re-importing the manifest to avoid duplicate checkouts.
 The Isaac asset repository uses Git LFS. The manifest pins a compatible pair
 of revisions; update them together so the ROS package's asset requirements
-stay satisfied. These repositories are present for future gripper integration;
-the build below still selects only the Robotnik Isaac packages.
+stay satisfied. The optional 2FG7 description and meshes are read directly
+from `src/onrobot/onrobot-ros2`; its simulation asset is loaded from
+`src/onrobot/onrobot-isaacsim`. The standard Robotnik build remains
+scoped to Robotnik packages and does not build the OnRobot ROS stack.
 
 ### 4. Install dependencies and build
 
@@ -129,6 +138,24 @@ ros2 launch robotnik_isaac_bringup bringup_complete.launch.py \
   robot_model:=rbkairos_plus
 ```
 
+Add the optional OnRobot 2FG7 to RB-KAIROS+:
+
+```bash
+cd ~/robotnik_isaac_ws
+ros2 launch robotnik_isaac_bringup bringup_complete.launch.py \
+  robot_id:=robot robot_model:=rbkairos_plus gripper_model:=2fg7
+```
+
+`gripper_model` is empty by default, so the usual bringup has no gripper.
+This first integration supports only `2fg7` and only with `rbkairos_plus`;
+other model/robot combinations fail before Isaac starts. The
+`robotnik_isaac_grippers` launch prepares the description and publishes the
+prefixed gripper frames; its runtime extension composes the USD.
+It does not start OnRobot's ROS control launch. To use another asset checkout,
+set `ONROBOT_ISAAC_ASSET_REPOSITORY` to the `onrobot-isaacsim` repository root.
+Add `headless:=true` to the command to run the gripper integration without
+the Isaac GUI.
+
 Run either model without the Isaac GUI:
 
 ```bash
@@ -160,8 +187,9 @@ arguments. To open a world without spawning a robot, use
 `isaac_sim_path`.
 
 Useful launch arguments on the complete bringup include `robot_id` (ROS
-namespace), `robot_model`, `x`, `y`, `z`, `yaw`, `frame_prefix`, `headless`,
-`world_path`, and `isaac_sim_path`. The default robot namespace is `robot`.
+namespace), `robot_model`, `gripper_model`, `x`, `y`, `z`, `yaw`,
+`frame_prefix`, `headless`, `world_path`, and `isaac_sim_path`. The default
+robot namespace is `robot`.
 
 ## Optional MoveIt for RB-KAIROS+
 
