@@ -17,7 +17,7 @@ ROS 2 workspace.
 | Stable launch surface, controller composition and TF | `robotnik_isaac_bringup` | `launch/`, `config/` |
 | Sensor profiles | `robotnik_isaac_sensors` | `config/` |
 | Isaac-specific MoveIt adaptation | `robotnik_isaac_moveit_config` | all package files |
-| Legacy RB-Watcher benchmark | directory `robotnik_isaac_benchmark`, package `isaac_sim` | entire package |
+| Benchmarking integration | `robotnik_sim_benchmarking` owns the `robotnik_isaac_benchmark/` directory, whose ROS package is named `isaac_sim` | outside this simulation system |
 
 The two Kairos control URDFs were moved, without renaming, from the generic
 package to description `config/`. They were not duplicated. Launch now resolves
@@ -41,6 +41,35 @@ home targets. Generic graph construction reads the registry. Kairos-specific
 functions still release converter-created joints, repair invalid inertias and
 retarget the arm mount; those are deliberately not part of the C++ bridge.
 
+## Robot description: USD and URDF
+
+The description is split by runtime responsibility. Isaac Sim loads the USD
+composition root selected by the model registry: `rbkairos_base.usda` for
+`rbkairos`, or `rbkairos_plus.usda` for `rbkairos_plus`. Each root composes its
+own `payloads/` layers, which contain the imported robot geometry, materials
+and physics. Keep each root beside its payload directory so its relative USD
+references remain valid. These USD assets are the runtime robot in Isaac Sim:
+they provide the simulated articulation, visual and collision geometry, and
+physics behavior.
+
+The runtime control URDFs in `robotnik_isaac_description/config/` serve a
+different purpose. They are intentionally lightweight integration skeletons,
+not the visual or physical robot model. They declare the joint/link names and
+`ros2_control` state and command interfaces consumed by controller manager
+and `robotnik_isaac_ros2_control`; the bridge exchanges joint state and command
+data with Isaac over the configured ROS topics. The launch also gives this
+URDF to `robot_state_publisher`, while isolating it from Isaac's joint-state
+stream, so it does not replace the simulated robot's transform tree.
+
+The separate xacro templates and generated, xacro-free URDFs under
+`robotnik_isaac_description/urdf_templates/` and
+`robotnik_isaac_description/assets/rbkairos/urdf/` are offline import inputs
+and references. They are used to prepare or regenerate Isaac assets; bringup
+does not load them in place of the USD runtime model. In short, USD defines
+what Isaac simulates, while the runtime URDF defines what ROS 2 controllers
+can observe and command. The model YAML connects the runtime to its USD and
+declares the associated drive and topic configuration.
+
 ## Kairos contract and consistency
 
 Both models publish `isaac/joint_states` and consume `isaac/joint_command`
@@ -60,13 +89,13 @@ the contract test prevents the structural names from diverging. The imported
 USD is validated at runtime because USD Python APIs are unavailable in normal
 ROS CI.
 
-## Benchmark decision
+## Benchmarking boundary
 
-The `robotnik_isaac_benchmark` directory and its `isaac_sim` package are retained and explicitly classified as legacy. It
-is not included by platform bringup and receives no new platform features.
-Existing package and launch names remain valid. A later major release should
-move it to an examples/benchmarks repository after one deprecation release;
-renaming it now would break users for no benefit to the common runtime.
+The `robotnik_isaac_benchmark/` directory is exclusively for
+`robotnik_sim_benchmarking`. Although it is present in this checkout and its
+ROS package is named `isaac_sim`, it is not part of the `robotnik_isaac`
+simulation system described here. The platform bringup, package responsibilities
+and launch guide in the root README do not include that directory.
 
 ## Repository separation and distribution
 
