@@ -83,7 +83,7 @@ def generate_launch_description():
             launch_arguments={
                 **common_arguments,
                 'stage_extension': PathJoinSubstitution([
-                    grippers_share, 'runtime', 'gripper_composition.py',
+                    grippers_share, 'runtime', 'gripper_extension.py',
                 ]),
                 'stage_extension_model': LaunchConfiguration('gripper_model'),
             }.items(),

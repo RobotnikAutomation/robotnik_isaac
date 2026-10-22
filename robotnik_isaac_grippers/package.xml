@@ -13,5 +13,13 @@
   <exec_depend>robot_state_publisher</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
   <exec_depend>xacro</exec_depend>
+  <exec_depend>controller_manager</exec_depend>
+  <exec_depend>joint_state_broadcaster</exec_depend>
+  <exec_depend>state_interfaces_broadcaster</exec_depend>
+  <exec_depend>onrobot_2fg7</exec_depend>
+  <exec_depend>onrobot_gripper_hardware</exec_depend>
+  <exec_depend>onrobot_gripper_controllers</exec_depend>
+  <test_depend>ament_cmake_pytest</test_depend>
+  <test_depend>python3-pytest</test_depend>
   <export><build_type>ament_cmake</build_type></export>
 </package>

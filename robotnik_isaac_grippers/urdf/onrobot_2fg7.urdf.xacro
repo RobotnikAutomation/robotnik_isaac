@@ -7,7 +7,7 @@
   <link name="arm_tool0"/>
   <xacro:onrobot_2fg7
     parent="arm_tool0"
-    origin_xyz="0 0 0.08"
+    origin_xyz="0 0 0"
     origin_rpy="0 0 0"
-    include_ros2_control="false"/>
+    include_ros2_control="true"/>
 </robot>

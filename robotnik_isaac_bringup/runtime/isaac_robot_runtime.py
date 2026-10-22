@@ -57,6 +57,9 @@ def _load_stage_extension(extension_path):
     for function in ('validate', 'compose'):
         if not callable(getattr(extension, function, None)):
             raise TypeError(f'Stage extension {path} must define {function}().')
+    hook = getattr(extension, 'configure_ros_graph', None)
+    if hook is not None and not callable(hook):
+        raise TypeError(f'Stage extension {path} configure_ros_graph must be callable.')
     return extension
 
 
@@ -478,6 +481,10 @@ def main():
             articulation_path = _find_articulation_root(stage, root_path)
             print(f'RB-KAIROS: using articulation root {articulation_path}.')
             _configure_ros_graph(app, root_path, articulation_path, args.robot_id, model)
+            if extension is not None:
+                hook = getattr(extension, 'configure_ros_graph', None)
+                if hook is not None:
+                    hook(app, root_path, articulation_path, args.robot_id, extension_state)
             print('RB-KAIROS: robot and ROS graph configured.')
         timeline = omni.timeline.get_timeline_interface()
         timeline.play()

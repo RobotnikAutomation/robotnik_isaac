@@ -59,7 +59,7 @@ repository at `src/robotnik_isaac`.
 Run from any directory:
 
 ```bash
-sudo apt install python3-vcstool git-lfs
+sudo apt install python3-vcstool git-lfs curl
 git lfs install
 ```
 
@@ -93,10 +93,33 @@ The Isaac asset repository uses Git LFS. The manifest pins a compatible pair
 of revisions; update them together so the ROS package's asset requirements
 stay satisfied. The optional 2FG7 description and meshes are read directly
 from `src/onrobot/onrobot-ros2`; its simulation asset is loaded from
-`src/onrobot/onrobot-isaacsim`. The standard Robotnik build remains
-scoped to Robotnik packages and does not build the OnRobot ROS stack.
+`src/onrobot/onrobot-isaacsim`. The control integration builds the required OnRobot ROS packages alongside Robotnik.
 
-### 4. Install dependencies and build
+### 4. Install OnRobot Tool API 1.2.0
+
+On Ubuntu 24.04 amd64 with ROS 2 Jazzy, install the matching runtime and
+development packages **before building**, including for the Isaac backend:
+the OnRobot hardware and controller plugins link against this SDK.
+From the workspace root:
+
+```bash
+mkdir -p tool-api-debs
+cd tool-api-debs
+curl -fL -O https://github.com/OnRobot/onrobot-tool-api/releases/download/1.2.0/libonrobot-tool-api1_1.2.0-1_amd64.deb
+curl -fL -O https://github.com/OnRobot/onrobot-tool-api/releases/download/1.2.0/libonrobot-tool-api-dev_1.2.0-1_amd64.deb
+sudo apt install ./libonrobot-tool-api1_1.2.0-1_amd64.deb ./libonrobot-tool-api-dev_1.2.0-1_amd64.deb
+dpkg-query -W libonrobot-tool-api1 libonrobot-tool-api-dev
+cd ..
+```
+
+Both packages must report `1.2.0-1`. If CMake reports that it found Tool API
+`0.1.0` but needs `1.2.0`, update both packages using the commands above and
+rebuild. Do not lower the CMake version requirement. The public
+[Tool API repository](https://github.com/OnRobot/onrobot-tool-api) provides
+documentation; cloning it through VCS does not install the SDK. Its binary
+packages are installed separately from the two repositories in `onrobot.repos`.
+
+### 5. Install dependencies and build
 
 Run from the workspace root. The workspace must also contain the Robotnik
 controller and description dependencies required by the package manifests.
@@ -104,11 +127,17 @@ controller and description dependencies required by the package manifests.
 ```bash
 cd ~/robotnik_isaac_ws
 source /opt/ros/jazzy/setup.bash
-rosdep install --from-paths src/robotnik_isaac --ignore-src -r -y
-colcon build --base-paths src/robotnik_isaac \
-  --packages-up-to robotnik_isaac_bringup robotnik_isaac_moveit_config
+rosdep install --from-paths src/robotnik_isaac src/onrobot/onrobot-ros2 \
+  --ignore-src -r -y --skip-keys onrobot_tool_api
+colcon build --base-paths src \
+  --packages-up-to robotnik_isaac_bringup robotnik_isaac_moveit_config \
+  --cmake-args -DBUILD_TESTING=OFF
 source install/setup.bash
 ```
+
+The skipped rosdep key is the SDK installed above. The build includes the
+OnRobot dependencies declared by the gripper package. Supplied OnRobot source
+distributions can omit internal tests, hence `BUILD_TESTING=OFF`.
 
 For each new terminal, run these setup commands from the workspace root before
 using ROS packages:
@@ -151,10 +180,53 @@ This first integration supports only `2fg7` and only with `rbkairos_plus`;
 other model/robot combinations fail before Isaac starts. The
 `robotnik_isaac_grippers` launch prepares the description and publishes the
 prefixed gripper frames; its runtime extension composes the USD.
-It does not start OnRobot's ROS control launch. To use another asset checkout,
+It also starts an independent `/robot/gripper/controller_manager` with the
+OnRobot Isaac hardware plugin and conventional aperture controller. It does
+not load the realtime controller or start a second standalone OnRobot launch. To use another asset checkout,
 set `ONROBOT_ISAAC_ASSET_REPOSITORY` to the `onrobot-isaacsim` repository root.
 Add `headless:=true` to the command to run the gripper integration without
 the Isaac GUI.
+
+### Control the 2FG7
+
+Wait for Isaac to finish starting and for feedback to arrive. No opening goal
+is sent automatically. In a second sourced terminal, check controller state:
+
+```bash
+ros2 control list_controllers -c /robot/gripper/controller_manager
+ros2 action info /robot/gripper/gripper_controller/gripper_cmd
+```
+
+The joint-state, limit and typed-state broadcasters, recovery controller and
+`gripper_controller` should be active. The action uses
+`control_msgs/action/ParallelGripperCommand`. `grip_stroke` is the **total
+aperture in metres**, from 0 to 0.073 with the standard finger configuration;
+the hardware plugin maps it to the physical `finger_stroke` joint (0–0.019 m).
+For an empty gripper, command an intermediate aperture:
+
+```bash
+ros2 action send_goal /robot/gripper/gripper_controller/gripper_cmd \
+  control_msgs/action/ParallelGripperCommand \
+  "{command: {name: [grip_stroke], position: [0.035], effort: [20.0]}}" --feedback
+```
+
+Use `position: [0.0]` for closed and `position: [0.073]` for fully open.
+Percentage speed control is disabled for Isaac. This integration does not
+establish force accuracy for contacts or grasped objects.
+
+Feedback comes from `/robot/isaac/joint_states`; gripper commands use
+`/robot/gripper/isaac/joint_command`, separate from the base/arm command topic.
+The description is published on `/robot/gripper/robot_description`, and the
+gripper's joint-state broadcaster uses its local topic. Replace `/robot` in
+these commands when using a different `robot_id`.
+
+For an integration check, send closed, intermediate and open goals without an
+object and verify symmetric finger motion and action results. Move the arm
+while sending gripper goals to check that commands remain independent. Cancel
+an in-progress goal using an action client and verify that motion stops. Stop
+Isaac feedback during a goal and check that stale state does not produce a
+successful result; inspect the typed state and controller diagnostics.
+Finally launch without `gripper_model` and confirm the base/arm still work.
 
 Run either model without the Isaac GUI:
 

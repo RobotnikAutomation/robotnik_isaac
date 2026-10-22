@@ -87,7 +87,9 @@ def compose_2fg7(stage, robot_root_path, asset):
 
     mount_path = f'{tool_path}/onrobot_2fg7_mount'
     mount = UsdGeom.Xform.Define(stage, mount_path)
-    mount.AddTranslateOp().Set(Gf.Vec3d(0.0, 0.0, 0.08))
+    # The asset base frame is already its mounting face. Attach it directly
+    # to tool0; an extra translation leaves a gap without an adapter body.
+    mount.AddTranslateOp().Set(Gf.Vec3d(0.0, 0.0, 0.0))
     asset_path = f'{mount_path}/asset'
     asset_prim = stage.DefinePrim(asset_path, 'Xform')
     if not asset_prim.GetReferences().AddReference(str(asset)):
