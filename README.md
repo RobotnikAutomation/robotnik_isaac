@@ -50,11 +50,50 @@ limits. The bridge's transport parameters and ROS 2 control contract are documen
 
 ## Get the workspace and build
 
-The commands below assume this repository is at
-`<workspace>/src/robotnik_isaac` and the shell is at `<workspace>`:
+The examples use `~/robotnik_isaac_ws` as the workspace and keep this
+repository at `src/robotnik_isaac`.
+
+### 1. Install workspace tools
+
+Run from any directory:
 
 ```bash
-git submodule update --init --recursive
+sudo apt install python3-vcstool git-lfs
+git lfs install
+```
+
+### 2. Create the workspace and clone this repository
+
+```bash
+mkdir -p ~/robotnik_isaac_ws/src
+cd ~/robotnik_isaac_ws/src
+git clone https://github.com/RobotnikAutomation/robotnik_isaac.git
+```
+
+### 3. Import the submodule and OnRobot repositories
+
+Run from the workspace root:
+
+```bash
+cd ~/robotnik_isaac_ws
+git -C src/robotnik_isaac submodule update --init --recursive
+vcs import src < src/robotnik_isaac/repos/onrobot.repos
+git -C src/onrobot-isaacsim lfs pull
+```
+
+The VCS manifest imports OnRobot as workspace siblings, not Git submodules.
+The Isaac asset repository uses Git LFS. The manifest pins a compatible pair
+of revisions; update them together so the ROS package's asset requirements
+stay satisfied. These repositories are present for future gripper integration;
+the build below still selects only the Robotnik Isaac packages.
+
+### 4. Install dependencies and build
+
+Run from the workspace root. The workspace must also contain the Robotnik
+controller and description dependencies required by the package manifests.
+
+```bash
+cd ~/robotnik_isaac_ws
 source /opt/ros/jazzy/setup.bash
 rosdep install --from-paths src/robotnik_isaac --ignore-src -r -y
 colcon build --base-paths src/robotnik_isaac \
@@ -62,21 +101,30 @@ colcon build --base-paths src/robotnik_isaac \
 source install/setup.bash
 ```
 
-If your repository is in a different workspace path, update
-`src/robotnik_isaac` in these commands to match its location. Source the ROS
-and workspace setup files in every terminal used for ROS commands.
+For each new terminal, run these setup commands from the workspace root before
+using ROS packages:
+
+```bash
+cd ~/robotnik_isaac_ws
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+```
 
 ## Launch a simulation
+
+Run launch commands from the workspace root in a sourced terminal.
 
 Start RB-KAIROS with the default empty world and Isaac GUI:
 
 ```bash
+cd ~/robotnik_isaac_ws
 ros2 launch robotnik_isaac_bringup bringup_complete.launch.py
 ```
 
 Start RB-KAIROS+ with the UR10e arm:
 
 ```bash
+cd ~/robotnik_isaac_ws
 ros2 launch robotnik_isaac_bringup bringup_complete.launch.py \
   robot_model:=rbkairos_plus
 ```
@@ -84,6 +132,7 @@ ros2 launch robotnik_isaac_bringup bringup_complete.launch.py \
 Run either model without the Isaac GUI:
 
 ```bash
+cd ~/robotnik_isaac_ws
 ros2 launch robotnik_isaac_bringup bringup_complete.launch.py \
   robot_model:=rbkairos_plus headless:=true
 ```
@@ -91,6 +140,7 @@ ros2 launch robotnik_isaac_bringup bringup_complete.launch.py \
 Choose another installed world file with `world_path`:
 
 ```bash
+cd ~/robotnik_isaac_ws
 ros2 launch robotnik_isaac_bringup bringup_complete.launch.py \
   robot_model:=rbkairos world_path:=/absolute/path/to/world.usda
 ```
@@ -99,6 +149,7 @@ Set the Isaac installation per launch with `isaac_sim_path` (this also
 overrides the default on `bringup_complete.launch.py`):
 
 ```bash
+cd ~/robotnik_isaac_ws
 ros2 launch robotnik_isaac_bringup bringup_complete.launch.py \
   isaac_sim_path:=/absolute/path/to/isaacsim
 ```
@@ -118,6 +169,7 @@ First launch the RB-KAIROS+ simulation and wait for the ROS controllers to
 start. In another sourced terminal, launch MoveIt:
 
 ```bash
+cd ~/robotnik_isaac_ws
 ros2 launch robotnik_isaac_moveit_config isaac_moveit.launch.py robot_id:=robot
 ```
 
@@ -138,6 +190,7 @@ To regenerate those URDF files after updating the upstream description or
 meshes, run from the workspace root:
 
 ```bash
+cd ~/robotnik_isaac_ws
 python3 src/robotnik_isaac/robotnik_isaac_description/scripts/generate_urdfs.py \
   --workspace "$PWD"
 ```

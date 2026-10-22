@@ -1,0 +1,9 @@
+repositories:
+  onrobot-isaacsim:
+    type: git
+    url: https://github.com/OnRobot/onrobot-isaacsim.git
+    version: d240f40c90d2df760b9f05d86f24fc23c2cc26dc
+  onrobot-ros2:
+    type: git
+    url: https://github.com/OnRobot/onrobot-ros2.git
+    version: 1b24536e4ae58b127025a4336fd1f06109c54801
